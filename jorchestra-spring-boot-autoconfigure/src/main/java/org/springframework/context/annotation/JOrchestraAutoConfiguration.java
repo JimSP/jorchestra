@@ -3,15 +3,14 @@ package org.springframework.context.annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -20,18 +19,15 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 import com.hazelcast.config.Config;
-import com.hazelcast.config.ListenerConfig;
-import com.hazelcast.config.TopicConfig;
+import com.hazelcast.config.ExecutorConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.MessageListener;
+import com.hazelcast.core.IExecutorService;
 
 import br.com.jorchestra.annotation.JOrchestra;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 import br.com.jorchestra.controller.JOrchestraWebSocketController;
-import br.com.jorchestra.listener.JOrchestraEventListener;
-import br.com.jorchestra.listener.JOrchestraEventListenerCallback;
+import br.com.jorchestra.util.JOrchestraContextUtils;
 
 @Configuration
 @EnableWebMvc
@@ -56,16 +52,22 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 	public void registerWebSocketHandlers(final WebSocketHandlerRegistry registry) {
 		LOGGER.info("m=registerWebSocketHandlers");
 
-		loadJOrchestraBeans().parallelStream().forEach(jorchestraBean -> {
+		JOrchestraContextUtils.setApplicationContext(applicationContext);
 
-			final JOrchestra jOrchestra = jorchestraBean.getClass().getAnnotation(JOrchestra.class);
-
-			Arrays.asList(jorchestraBean.getClass().getDeclaredMethods()).parallelStream()
+		final Map<String, Object> map = loadJOrchestraBeans();
+		map.entrySet().parallelStream().forEach(entry -> {
+			Arrays.asList(entry.getValue().getClass().getDeclaredMethods()).parallelStream()
 					.filter(method -> method.getModifiers() == Modifier.PUBLIC).forEach(method -> {
+
+						final String jOrchestraBeanName = entry.getKey();
+						final Object jOrchestraBean = JOrchestraContextUtils.getJorchestraBean(jOrchestraBeanName);
+
+						final JOrchestra jOrchestra = jOrchestraBean.getClass().getDeclaredAnnotation(JOrchestra.class);
+
 						final String path = jOrchestra.path();
 						final String methodName = method.getName();
 
-						registerJOrchestraPath(registry, jorchestraBean, method, path, methodName);
+						registerJOrchestraPath(registry, jOrchestraBeanName, method, path, methodName);
 					});
 		});
 	}
@@ -82,45 +84,38 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 		return config;
 	}
 
-	private void registerJOrchestraPath(final WebSocketHandlerRegistry registry, final Object jorchestraBean,
+	private void registerJOrchestraPath(final WebSocketHandlerRegistry registry, final String jOrchestraBeanName,
 			final Method method, final String path, final String methodName) {
 
 		final String jorchestraPath = "/" + path + "-" + methodName;
 
 		LOGGER.info("m=registerJOrchestraPath, jorchestraPath=" + jorchestraPath);
 
-		final JOrchestraEventListenerCallback jOrchestraEventListenerCallback = new JOrchestraEventListenerCallback();
-
 		final Config config = hazelCastConfig(jorchestraConfigurationProperties.getInstanceName());
 
-		configTopicResult(jorchestraPath + "-callback", jOrchestraEventListenerCallback, config);
+		config.addExecutorConfig(createExecutorConfig(jorchestraPath));
 
 		final HazelcastInstance hazelcastInstance = hazelcastInstance(config);
 
-		final ITopic<Object> resultTopic = createTopic(jorchestraPath + "callback", jOrchestraEventListenerCallback,
-				hazelcastInstance);
+		final IExecutorService executorService = createExecutorService(jorchestraPath, hazelcastInstance);
 
-		final ITopic<Object[]> topic = createTopic(jorchestraPath,
-				new JOrchestraEventListener(jorchestraBean, method, resultTopic), hazelcastInstance);
-
-		final JOrchestraWebSocketController jOrchestraWebSocketController = jOrchestraWebSocketController(path, method,
-				topic);
-
-		jOrchestraEventListenerCallback.setJOrchestraWebSocketController(jOrchestraWebSocketController);
+		final JOrchestraWebSocketController jOrchestraWebSocketController = jOrchestraWebSocketController(
+				jorchestraPath, jOrchestraBeanName, method, executorService);
 
 		registry.addHandler(jOrchestraWebSocketController, jorchestraPath) //
 				.setAllowedOrigins(jorchestraConfigurationProperties.getAllowedOrigins());
 	}
 
-	private <T> ITopic<T> createTopic(final String jorchestraPath, final MessageListener<T> messageListener,
-			final HazelcastInstance hazelcastInstance) {
-
-		final ITopic<T> topic = hazelcastInstance.getTopic(jorchestraPath);
-		topic.addMessageListener(messageListener);
-		return topic;
+	private ExecutorConfig createExecutorConfig(final String jorchestraPath) {
+		return new ExecutorConfig(jorchestraPath);
 	}
 
-	private List<Object> loadJOrchestraBeans() {
+	private <T> IExecutorService createExecutorService(final String jorchestraPath,
+			final HazelcastInstance hazelcastInstance) {
+		return hazelcastInstance.getExecutorService(jorchestraPath);
+	}
+
+	private Map<String, Object> loadJOrchestraBeans() {
 		LOGGER.info("m=loadJOrchestraBeans, applicationContext.beanDefinitionNames="
 				+ Arrays.toString(applicationContext.getBeanDefinitionNames()));
 
@@ -128,31 +123,20 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 
 		LOGGER.info("m=loadJOrchestraBeans, jorcherstraBeans=" + Arrays.toString(jorcherstraBeans));
 
-		return Arrays.asList(jorcherstraBeans) //
+		final Map<String, Object> map = new HashMap<>();
+
+		Arrays.asList(jorcherstraBeans) //
 				.parallelStream() //
-				.map(jorcherstraBeanName -> applicationContext.getBean(jorcherstraBeanName)) //
-				.collect(Collectors.toList());
+				.forEach(jorcherstraBeanName -> {
+					final Object object = applicationContext.getBean(jorcherstraBeanName);
+					map.put(jorcherstraBeanName, object);
+				});
+
+		return map;
 	}
 
-	private JOrchestraWebSocketController jOrchestraWebSocketController(final String path, final Method method,
-			final ITopic<Object[]> topic) {
-		return new JOrchestraWebSocketController(path, method, topic);
-	}
-
-	private <T> void configTopicResult(final String jorchestraPath, final MessageListener<T> messageListener,
-			final Config config) {
-		final TopicConfig topicConfig = topicConfigResult(jorchestraPath, messageListener);
-
-		config.addTopicConfig(topicConfig);
-	}
-
-	private <T> TopicConfig topicConfigResult(final String jorchestraPath, final MessageListener<T> messageListener) {
-		return new TopicConfig(jorchestraPath) //
-				.setMultiThreadingEnabled(true) //
-				.addMessageListenerConfig(listenerConfig(messageListener)); //
-	}
-
-	private <T> ListenerConfig listenerConfig(final MessageListener<T> messageListener) {
-		return new ListenerConfig(messageListener);
+	private JOrchestraWebSocketController jOrchestraWebSocketController(final String path,
+			final String jOrchestraBeanName, final Method method, final IExecutorService executorService) {
+		return new JOrchestraWebSocketController(path, jOrchestraBeanName, method, executorService);
 	}
 }

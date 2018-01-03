@@ -7,7 +7,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableJOrchestra;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.socket.client.WebSocketConnectionManager;
@@ -51,7 +50,7 @@ public class JOrchestraClientExample {
 		Assert.assertTrue(jOrchestraWebSocketClientHandle.isHandleTransportError());
 	}
 
-	@Configuration
+	//@Configuration
 	public static class JOrchestraConfigurationExample {
 
 		private static final String URL = "ws://localhost:8080/account-transfer";
