@@ -1,8 +1,9 @@
 /.gradle/
-/build/
+*build/
 gradle.properties
 .class
-/bin/
+*/bin/
 settings.xml
 .project
 .classpath
+secring.gpg
