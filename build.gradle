@@ -1,0 +1,42 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+jar {
+	baseName = 'jorchestra'
+	version = '0.0.1-SNAPSHOT'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+	compile project(':jorchestra-core')
+	compile project(':jorchestra-spring-boot-autoconfigure')
+	compile project(':spring-boot-starter-jorchestra')
+	compile project(':jorchestra-example')
+}
+
+allprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
+
+	compileJava {
+    	options.fork = true
+    	options.incremental = true
+	}
+	
+	repositories {
+		mavenCentral()
+		maven {url "http://central.maven.org/maven2"}
+		maven { url "https://repo.spring.io/snapshot" }
+		maven { url "https://repo.spring.io/milestone" }	
+	}
+}
+
+subprojects {
+    group = 'br.com.jorchestra'
+    version = '0.0.1'
+}
