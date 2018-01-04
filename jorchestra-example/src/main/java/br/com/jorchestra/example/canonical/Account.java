@@ -9,6 +9,10 @@ public class Account implements Serializable {
 
 	private static final long serialVersionUID = 6858788904693835444L;
 
+	public static AccountBuilder create() {
+		return AccountBuilder.create(); 
+	}
+	
 	private final Long accountNumber;
 
 	@JsonCreator

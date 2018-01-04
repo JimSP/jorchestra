@@ -18,7 +18,17 @@ public final class TransferResponseBuilder {
 	private Status statusWithdraw;
 	private Status statusTransfer;
 
-	public TransferResponseBuilder withTransferIdentification(final String transferIdentification) {
+	/**
+	 * nao usar prefixo with nesse caso.
+	 * o prefixo with será chamado pelo JOrchestraHandle
+	 * e tentará documentar esse campo.
+	 * 
+	 * Esse campo já é documentado pelo método withTransferIdentificationUUID.
+	 * 
+	 * @param transferIdentification
+	 * @return TransferResponseBuilder
+	 */
+	public TransferResponseBuilder setTransferIdentification(final String transferIdentification) {
 		this.transferIdentification = UUID.fromString(transferIdentification);
 		return this;
 	}

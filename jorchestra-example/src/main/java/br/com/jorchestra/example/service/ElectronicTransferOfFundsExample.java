@@ -44,7 +44,7 @@ public class ElectronicTransferOfFundsExample {
 				.create() //
 				.withStatusWithdraw(statusWithdraw) //
 				.withStatusTransfer(statusTransfer) //
-				.withTransferIdentification(transferRequest.getTransferIdentification()) //
+				.setTransferIdentification(transferRequest.getTransferIdentification()) //
 				.build();
 	}
 }
