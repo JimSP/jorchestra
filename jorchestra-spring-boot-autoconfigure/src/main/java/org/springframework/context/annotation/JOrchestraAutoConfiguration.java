@@ -21,9 +21,10 @@ import com.hazelcast.core.IExecutorService;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 import br.com.jorchestra.controller.JOrchestraWebSocketController;
 import br.com.jorchestra.handle.JOrchestraHandle;
+import br.com.jorchestra.service.JOrchestraBeans;
 import br.com.jorchestra.util.JOrchestraContextUtils;
 
-@Configuration
+@Configuration(value = "jOrchestraAutoConfiguration")
 @EnableWebMvc
 @EnableWebSocket
 @EnableConfigurationProperties(JOrchestraConfigurationProperties.class)
@@ -37,9 +38,9 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 	@Autowired
 	private JOrchestraConfigurationProperties jorchestraConfigurationProperties;
 
-	public HazelcastInstance hazelcastInstance(final Config config) {
-		LOGGER.info("m=hazelcastInstance, config=" + config);
-		return Hazelcast.getOrCreateHazelcastInstance(config);
+	@Bean
+	public JOrchestraBeans JOrchestraBeans() {
+		return new JOrchestraBeans();
 	}
 
 	@Override
@@ -53,8 +54,12 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 	@Override
 	public void configureDefaultServletHandling(final DefaultServletHandlerConfigurer configurer) {
 		LOGGER.info("m=configureDefaultServletHandling");
-
 		configurer.enable();
+	}
+
+	private HazelcastInstance hazelcastInstance(final Config config) {
+		LOGGER.info("m=hazelcastInstance, config=" + config);
+		return Hazelcast.getOrCreateHazelcastInstance(config);
 	}
 
 	private Config hazelCastConfig(final String memberName) {
@@ -69,7 +74,7 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 
 		LOGGER.info("m=registerJOrchestraPath, jorchestraPath=" + jorchestraPath);
 
-		final Config config = hazelCastConfig(jorchestraConfigurationProperties.getInstanceName());
+		final Config config = hazelCastConfig(jorchestraConfigurationProperties.getClusterName());
 
 		config.addExecutorConfig(createExecutorConfig(jorchestraPath));
 

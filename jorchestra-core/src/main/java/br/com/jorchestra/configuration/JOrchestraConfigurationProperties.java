@@ -1,29 +1,42 @@
 package br.com.jorchestra.configuration;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "jocrhestra")
+@ConfigurationProperties(prefix = "jOcrhestra")
 public class JOrchestraConfigurationProperties {
 
+	private String name;
 	private String test;
-	private String instanceName;
+	private String clusterName;
 	private String allowedOrigins;
 	private Integer poolSize;
+	private Map<String, String> eventsClassMap;
+
+	public String getName() {
+		return name == null ? "JOrquestra-DEV" : name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	public String getTest() {
-		return test == null ? "jorchestra-success" : test;
+		return test == null ? "jOcrhestra-success" : test;
 	}
 
 	public void setTest(String test) {
 		this.test = test;
 	}
 
-	public String getInstanceName() {
-		return instanceName == null ? "jorchestra" : instanceName;
+	public String getClusterName() {
+		return clusterName == null ? "jOcrhestra" : clusterName;
 	}
 
-	public void setInstanceName(String instanceName) {
-		this.instanceName = instanceName;
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
 	}
 
 	public String getAllowedOrigins() {
@@ -42,9 +55,19 @@ public class JOrchestraConfigurationProperties {
 		this.poolSize = poolSize;
 	}
 
+	public Map<String, String> getEventsClassMap() {
+		return eventsClassMap == null ? Collections.emptyMap() : eventsClassMap;
+	}
+
+	public void setEventsClassMap(Map<String, String> getEventsClassMap) {
+		this.eventsClassMap = getEventsClassMap;
+	}
+
 	@Override
 	public String toString() {
-		return "JOrchestraConfigurationProperties [test=" + getTest() + ", instanceName=" + getInstanceName()
-				+ ", allowedOrigins=" + getAllowedOrigins() + ", poolSize=" + getPoolSize() + "]";
+		return "JOrchestraConfigurationProperties [name=" + getName() + ", test=" + getTest() + ", clusterName="
+				+ getClusterName() + ", allowedOrigins=" + getAllowedOrigins() + ", poolSize=" + getPoolSize()
+				+ ", eventsClassMap=" + getEventsClassMap() + "]";
 	}
+
 }
