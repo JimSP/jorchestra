@@ -10,6 +10,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
+import br.com.jorchestra.service.JOrchestraRegisterSystemEvents;
 
 @Configuration
 @EnableJOrchestra
@@ -21,6 +22,11 @@ public class JOrchestraExampleConfiguration {
 	@Bean("hazelcastInstance")
 	public HazelcastInstance hazelcastInstance() {
 		return Hazelcast.getOrCreateHazelcastInstance(new Config(jorchestraConfigurationProperties.getClusterName()));
+	}
+	
+	@Bean("jOrchestraRegisterSystemEvents")
+	public JOrchestraRegisterSystemEvents JOrchestraRegisterSystemEvents() {
+		return new JOrchestraRegisterSystemEvents();
 	}
 
 }

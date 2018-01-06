@@ -1,4 +1,4 @@
-package br.com.jorchestra.annotation;
+package br.com.jorchestra.canonical;
 
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
@@ -16,7 +16,6 @@ import br.com.jorchestra.controller.JOrchestraMessageWebSocketController;
 import br.com.jorchestra.controller.JOrchestraNotificationWebSocketController;
 import br.com.jorchestra.dto.JOrchestraNotification;
 import br.com.jorchestra.dto.JOrchestraSystemEvent;
-import br.com.jorchestra.handle.JOrchestraHandle;
 
 public enum JOrchestraSignal {
 
@@ -45,12 +44,13 @@ public enum JOrchestraSignal {
 		}
 
 		@Override
-		public void register(final String jorchestraPath, final JOrchestraHandle jOrchestraHandle,
-				final WebSocketHandlerRegistry webSocketHandlerRegistry,
+		public void register(final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic, final String jorchestraPath,
+				final JOrchestraHandle jOrchestraHandle, final WebSocketHandlerRegistry webSocketHandlerRegistry,
 				final JOrchestraConfigurationProperties jOrchestraConfigurationProperties, final Object iService) {
 
 			final JOrchestraMessageWebSocketController jOrchestraWebSocketController = new JOrchestraMessageWebSocketController(
-					jOrchestraHandle, (IExecutorService) iService);
+					jOrchestraHandle, jOrchestraStateCallTopic, jOrchestraConfigurationProperties,
+					(IExecutorService) iService);
 
 			webSocketHandlerRegistry.addHandler(jOrchestraWebSocketController, jorchestraPath) //
 					.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
@@ -84,12 +84,13 @@ public enum JOrchestraSignal {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public void register(final String jorchestraPath, final JOrchestraHandle jOrchestraHandle,
-				final WebSocketHandlerRegistry webSocketHandlerRegistry,
+		public void register(final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic, final String jorchestraPath,
+				final JOrchestraHandle jOrchestraHandle, final WebSocketHandlerRegistry webSocketHandlerRegistry,
 				final JOrchestraConfigurationProperties jOrchestraConfigurationProperties, final Object iService) {
 
 			final JOrchestraNotificationWebSocketController jOrchestraNotificationWebSocketController = new JOrchestraNotificationWebSocketController(
-					jOrchestraHandle, (ITopic<JOrchestraNotification>) iService);
+					jOrchestraHandle, jOrchestraStateCallTopic, jOrchestraConfigurationProperties,
+					(ITopic<JOrchestraNotification>) iService);
 
 			((ITopic<JOrchestraNotification>) iService).addMessageListener(jOrchestraNotificationWebSocketController);
 
@@ -123,12 +124,13 @@ public enum JOrchestraSignal {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public void register(final String jorchestraPath, final JOrchestraHandle jOrchestraHandle,
-				final WebSocketHandlerRegistry webSocketHandlerRegistry,
+		public void register(final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic, final String jorchestraPath,
+				final JOrchestraHandle jOrchestraHandle, final WebSocketHandlerRegistry webSocketHandlerRegistry,
 				final JOrchestraConfigurationProperties jOrchestraConfigurationProperties, final Object iService) {
 
 			final JOrchestraEventWebSocketController jOrchestraEventWebSocketController = new JOrchestraEventWebSocketController(
-					jOrchestraHandle);
+					jOrchestraHandle, jOrchestraStateCallTopic, jOrchestraConfigurationProperties);
+
 			((ITopic<JOrchestraSystemEvent>) iService).addMessageListener(jOrchestraEventWebSocketController);
 
 			addHandle(jorchestraPath, webSocketHandlerRegistry, jOrchestraConfigurationProperties,
@@ -145,7 +147,8 @@ public enum JOrchestraSignal {
 
 	public abstract <T> Class<T> getClassType();
 
-	public abstract void register(final String jorchestraPath, final JOrchestraHandle jOrchestraHandle,
+	public abstract void register(final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic,
+			final String jorchestraPath, final JOrchestraHandle jOrchestraHandle,
 			final WebSocketHandlerRegistry webSocketHandlerRegistry,
 			final JOrchestraConfigurationProperties jOrchestraConfigurationProperties, final Object iService);
 

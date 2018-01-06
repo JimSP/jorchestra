@@ -15,12 +15,16 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 import com.hazelcast.config.Config;
+import com.hazelcast.config.TopicConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ITopic;
 
-import br.com.jorchestra.annotation.JOrchestraSignal;
+import br.com.jorchestra.canonical.JOrchestraHandle;
+import br.com.jorchestra.canonical.JOrchestraSignal;
+import br.com.jorchestra.canonical.JOrchestraStateCall;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
-import br.com.jorchestra.handle.JOrchestraHandle;
+import br.com.jorchestra.controller.JOrchestraMonitorWebSocket;
 import br.com.jorchestra.service.JOrchestraBeans;
 import br.com.jorchestra.util.JOrchestraContextUtils;
 
@@ -53,11 +57,15 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 		final List<JOrchestraHandle> list = JOrchestraContextUtils.jorchestraHandleConsumer( //
 				(jOrchestraHandle) -> {
 					final JOrchestraSignal jOrchestraSignal = jOrchestraHandle.getjOrchestraSignal();
-
 					registerJOrchestraPath(jOrchestraHandle, config, jOrchestraSignal);
 				});
 
+		final JOrchestraMonitorWebSocket JOrchestraMonitorWebSocket = new JOrchestraMonitorWebSocket();
+		
 		final HazelcastInstance hazelcastInstance = hazelcastInstance(config);
+		final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic = hazelcastInstance
+				.getReliableTopic("jOrchestraStateCallTopic");
+		jOrchestraStateCallTopic.addMessageListener(JOrchestraMonitorWebSocket);
 
 		list.forEach(jOrchestraHandle -> {
 			final String jorchestraPath = jOrchestraHandle.getJOrchestraPath();
@@ -69,9 +77,13 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 			final Object iService = jOrchestraSignal.createService(jorchestraPath, reliable, hazelcastInstance,
 					messageType, classType);
 
-			jOrchestraSignal.register(jorchestraPath, jOrchestraHandle, webSocketHandlerRegistry,
-					jOrchestraConfigurationProperties, iService);
+			jOrchestraSignal.register(jOrchestraStateCallTopic, jorchestraPath, jOrchestraHandle,
+					webSocketHandlerRegistry, jOrchestraConfigurationProperties, iService);
 		});
+
+		webSocketHandlerRegistry //
+				.addHandler(JOrchestraMonitorWebSocket, "jOrchestra-monitor") //
+				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
 	}
 
 	@Override
@@ -89,6 +101,7 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 
 	private static Config hazelCastConfig(final String memberName) {
 		final Config config = new Config(memberName);
+		config.addTopicConfig(new TopicConfig("jOrchestraStateCallTopic"));
 		return config;
 	}
 

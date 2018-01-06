@@ -1,4 +1,4 @@
-package br.com.jorchestra.handle;
+package br.com.jorchestra.canonical;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ClassUtils;
 
-public enum JOrchestaType {
+public enum JOrchestaTemplateDefaultType {
 
 	BOOLEAN(Boolean.class, true), //
 	BYTE(Byte.class, 0xFF), //
@@ -36,18 +36,18 @@ public enum JOrchestaType {
 	ENUM(Enum.class, new Object()), //
 	OBJECT(Object.class, new Object());
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestaType.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestaTemplateDefaultType.class);
 
 	private final Class<?> javaType;
 	private final Object defaultValue;
 
-	private JOrchestaType(final Class<?> javaType, final Object defaultValue) {
+	private JOrchestaTemplateDefaultType(final Class<?> javaType, final Object defaultValue) {
 		this.javaType = javaType;
 		this.defaultValue = defaultValue;
 	}
 
 	public static Object getDefaltValueFromClazz(final Class<?> clazz) {
-		return Arrays.asList(JOrchestaType.values()) //
+		return Arrays.asList(JOrchestaTemplateDefaultType.values()) //
 				.parallelStream() //
 				.filter(predicate -> predicate.javaType.isAssignableFrom(ClassUtils.resolvePrimitiveIfNecessary(clazz))) //
 				.map(jOrchestaType -> clazz.isEnum() ? getEnumDefaultValue(clazz) : jOrchestaType.defaultValue)

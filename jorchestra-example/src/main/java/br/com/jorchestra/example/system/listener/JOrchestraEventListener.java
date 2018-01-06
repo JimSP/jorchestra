@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 import br.com.jorchestra.dto.JOrchestraSystemEvent;
-import br.com.jorchestra.example.service.JOrchestraRegisterSystemEvents;
+import br.com.jorchestra.service.JOrchestraRegisterSystemEvents;
 
 @Component
 public class JOrchestraEventListener implements ApplicationListener<ApplicationEvent> {

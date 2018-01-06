@@ -10,6 +10,7 @@ public final class JOrchestraMonitorResponseBuilder {
 	private String jOrchestraPah;
 	private String requestTemplate;
 	private String responseTemplate;
+	private String message;
 
 	private JOrchestraMonitorResponseBuilder() {
 
@@ -35,7 +36,13 @@ public final class JOrchestraMonitorResponseBuilder {
 		return this;
 	}
 
+	public JOrchestraMonitorResponseBuilder withMessage(final String message) {
+		this.message = message;
+		return this;
+	}
+
 	public JOrchestraBeanResponse build() {
-		return new JOrchestraBeanResponse(jOrchestraBeanName, jOrchestraPah, requestTemplate, responseTemplate);
+		return new JOrchestraBeanResponse(jOrchestraBeanName, jOrchestraPah, requestTemplate, responseTemplate,
+				message);
 	}
 }

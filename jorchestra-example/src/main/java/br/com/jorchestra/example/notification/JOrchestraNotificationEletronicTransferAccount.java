@@ -10,7 +10,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 
 import br.com.jorchestra.annotation.JOrchestra;
-import br.com.jorchestra.annotation.JOrchestraSignal;
+import br.com.jorchestra.canonical.JOrchestraSignal;
 import br.com.jorchestra.dto.JOrchestraNotification;
 import br.com.jorchestra.example.canonical.Status;
 import br.com.jorchestra.example.dto.TransferResponse;

@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.ServletRequestHandledEvent;
 
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
-import br.com.jorchestra.example.service.JOrchestraRegisterSystemEvents;
 import br.com.jorchestra.example.system.event.JOrchestraHelloWordSystemEvent;
 import br.com.jorchestra.service.JOrchestraBeans;
+import br.com.jorchestra.service.JOrchestraRegisterSystemEvents;
 
 @Component
 public class JOrchestraRunner implements CommandLineRunner {

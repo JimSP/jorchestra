@@ -1,4 +1,4 @@
-package br.com.jorchestra.example.service;
+package br.com.jorchestra.service;
 
 import java.util.ArrayList;
 import java.util.Collections;

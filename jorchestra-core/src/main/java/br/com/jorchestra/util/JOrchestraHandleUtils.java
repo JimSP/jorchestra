@@ -1,4 +1,4 @@
-package br.com.jorchestra.handle;
+package br.com.jorchestra.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -14,57 +14,15 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import br.com.jorchestra.annotation.JOrchestraSignal;
+import br.com.jorchestra.canonical.JOrchestaTemplateDefaultType;
 
-public final class JOrchestraHandle {
+public class JOrchestraHandleUtils {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraHandle.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraHandleUtils.class);
 
-	private final ObjectMapper objectMapper = new ObjectMapper();
-	private final String jOrchestraBeanName;
-	private final Method method;
-	private final String path;
-	private final JOrchestraSignal jOrchestraSignal;
-	private final Boolean realiable;
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	public JOrchestraHandle(final String jOrchestraBeanName, final Method method, final String path,
-			final JOrchestraSignal jOrchestraSignal, final Boolean realiable) {
-		this.jOrchestraBeanName = jOrchestraBeanName;
-		this.method = method;
-		this.path = path;
-		this.jOrchestraSignal = jOrchestraSignal;
-		this.realiable = realiable;
-	}
-
-	public String getjOrchestraBeanName() {
-		return jOrchestraBeanName;
-	}
-
-	public Method getMethod() {
-		return method;
-	}
-
-	public String getPath() {
-		return path;
-	}
-
-	public String getMethodName() {
-		return method.getName();
-	}
-
-	public String getJOrchestraPath() {
-		return String.format("/%s-%s", getPath(), getMethodName());
-	}
-
-	public JOrchestraSignal getjOrchestraSignal() {
-		return jOrchestraSignal;
-	}
-
-	public Boolean isReliable() {
-		return realiable;
-	}
-
-	public String getJOrchestraRequestTemplate() {
+	public static String getJOrchestraRequestTemplate(final Method method) {
 		final Object[] list = generateObjectTemplate(method.getParameterTypes());
 
 		try {
@@ -75,9 +33,8 @@ public final class JOrchestraHandle {
 		}
 	}
 
-	public String getJOrchestraResponseTemplate() {
+	public static String getJOrchestraResponseTemplate(final Method method) {
 		final Object[] list = generateObjectTemplate(new Class[] { method.getReturnType() });
-
 		try {
 			return objectTemplateToJson(list);
 		} catch (JsonProcessingException e) {
@@ -86,24 +43,22 @@ public final class JOrchestraHandle {
 		}
 	}
 
-	private String objectTemplateToJson(final Object[] list) throws JsonProcessingException {
+	private static String objectTemplateToJson(final Object[] list) throws JsonProcessingException {
 		if (list != null) {
-			return objectMapper.writeValueAsString(list.length == 1 ? list[0] : list);
+			return OBJECT_MAPPER.writeValueAsString(list.length == 1 ? list[0] : list);
 		} else {
 			return null;
 		}
 	}
 
-	private Object createAndBuildObjectTemplate(final Class<?> clazz)
+	private static Object createAndBuildObjectTemplate(final Class<?> clazz)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException, ClassNotFoundException {
-
 		try {
 			if (clazz.isPrimitive() || clazz.isEnum() || String.class.isAssignableFrom(clazz)) {
 				return getDefaltValueFromClazz(clazz);
 			} else {
 				final Object builder = clazz.getMethod("create", new Class<?>[] {}).invoke(null, new Object[] {});
-
 				if (builder != null) {
 					try {
 						createWithBuilder(builder);
@@ -124,7 +79,7 @@ public final class JOrchestraHandle {
 		}
 	}
 
-	private Object createWithContructor(final Class<?> clazz)
+	private static Object createWithContructor(final Class<?> clazz)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException, ClassNotFoundException {
 
@@ -135,7 +90,6 @@ public final class JOrchestraHandle {
 		} else {
 			for (Constructor<?> constructor : constructors) {
 				if (Modifier.isPublic(constructor.getModifiers())) {
-
 					if (constructor.getParameterCount() == 0) {
 						return clazz.newInstance();
 					} else if (constructor.getParameterCount() == 1
@@ -157,19 +111,16 @@ public final class JOrchestraHandle {
 		return null;
 	}
 
-	private Object getDefaltValueFromClazz(final Class<?> clazz) {
-		return JOrchestaType.getDefaltValueFromClazz(clazz);
+	private static Object getDefaltValueFromClazz(final Class<?> clazz) {
+		return JOrchestaTemplateDefaultType.getDefaltValueFromClazz(clazz);
 	}
 
-	private void createWithBuilder(final Object builder)
+	private static void createWithBuilder(final Object builder)
 			throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException,
 			IllegalArgumentException, SecurityException, ClassNotFoundException {
 		final Class<?> builderClazz = builder.getClass();
-
 		final Method[] builderMethods = builderClazz.getDeclaredMethods();
-
 		for (Method withMethod : builderMethods) {
-
 			if (withMethod.getName().contains("with") && !Modifier.isStatic(withMethod.getModifiers())
 					&& Modifier.isPublic(withMethod.getModifiers())) {
 				final List<Object> parameters = createParameters(withMethod.getParameterTypes());
@@ -178,12 +129,11 @@ public final class JOrchestraHandle {
 		}
 	}
 
-	private List<Object> createParameters(final Class<?>[] parametersClazz)
+	private static List<Object> createParameters(final Class<?>[] parametersClazz)
 			throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException,
 			IllegalArgumentException, SecurityException, ClassNotFoundException {
 		final List<Object> parameters = new ArrayList<>();
 		for (Class<?> parameterClazz : parametersClazz) {
-
 			if (parameterClazz.isPrimitive() || parameterClazz.isEnum()
 					|| String.class.isAssignableFrom(parameterClazz)) {
 				final Object parameter = getDefaltValueFromClazz(parameterClazz);
@@ -198,15 +148,13 @@ public final class JOrchestraHandle {
 		return parameters;
 	}
 
-	private Object[] generateObjectTemplate(final Class<?>[] clazz) {
+	private static Object[] generateObjectTemplate(final Class<?>[] clazz) {
 		final List<Object> list = new ArrayList<>();
 		for (Class<?> itemClazz : clazz) {
 			try {
 				final Object objectTemplate = createAndBuildObjectTemplate(itemClazz);
-
 				if (objectTemplate != null) {
 					final Class<?> templateClazz = objectTemplate.getClass();
-
 					for (Field field : templateClazz.getDeclaredFields()) {
 						if (!Modifier.isStatic(field.getModifiers()) && !field.getDeclaringClass().isPrimitive()
 								&& Modifier.isPublic(field.getModifiers()) && !Modifier.isFinal(field.getModifiers())) {
@@ -226,16 +174,13 @@ public final class JOrchestraHandle {
 							}
 						}
 					}
-
 					list.add(objectTemplate);
 				}
-
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException | InstantiationException | ClassNotFoundException e1) {
 				LOGGER.debug("m=generateObjectTemplate, step=field, class=" + itemClazz, e1);
 			}
 		}
-
 		return list.size() == 0 ? null : list.toArray();
 	}
 }

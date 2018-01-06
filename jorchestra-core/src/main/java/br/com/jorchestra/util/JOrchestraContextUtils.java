@@ -15,8 +15,8 @@ import org.springframework.context.ApplicationContext;
 import com.hazelcast.util.function.Consumer;
 
 import br.com.jorchestra.annotation.JOrchestra;
-import br.com.jorchestra.annotation.JOrchestraSignal;
-import br.com.jorchestra.handle.JOrchestraHandle;
+import br.com.jorchestra.canonical.JOrchestraHandle;
+import br.com.jorchestra.canonical.JOrchestraSignal;
 
 public class JOrchestraContextUtils {
 
@@ -39,15 +39,15 @@ public class JOrchestraContextUtils {
 	}
 
 	public static Method getMethosByJOrchestraPath(final Object jOrchestraBean, final String methodName,
-			final Class<?>[] parameters) throws NoSuchMethodException, SecurityException {
-		return jOrchestraBean.getClass().getMethod(methodName, parameters);
+			final Class<?>[] parametersType) throws NoSuchMethodException, SecurityException {
+		return jOrchestraBean.getClass().getMethod(methodName, parametersType);
 	}
 
 	public static List<JOrchestraHandle> jorchestraHandleConsumer(final ApplicationContext applicationContext,
 			final Consumer<JOrchestraHandle> consumer) {
-		
+
 		final List<JOrchestraHandle> list = new ArrayList<>();
-		
+
 		JOrchestraContextUtils.loadJOrchestraBeans(applicationContext) //
 				.entrySet() //
 				.parallelStream() //
@@ -59,7 +59,7 @@ public class JOrchestraContextUtils {
 								list.add(jOrchestraHandle);
 							});
 				});
-		
+
 		return list;
 	}
 
@@ -74,12 +74,14 @@ public class JOrchestraContextUtils {
 					final Object jOrchestraBean = JOrchestraContextUtils.getJorchestraBean(jOrchestraBeanName);
 
 					final JOrchestra jOrchestra = jOrchestraBean.getClass().getDeclaredAnnotation(JOrchestra.class);
-
 					final String path = jOrchestra.path();
 					final JOrchestraSignal jOrchestraSignal = jOrchestra.jOrchestraSignal();
 					final Boolean reliable = jOrchestra.reliable();
+					final String methodName = method.getName();
+					final Class<?>[] jorchestraParametersType = method.getParameterTypes();
 
-					return new JOrchestraHandle(jOrchestraBeanName, method, path, jOrchestraSignal, reliable);
+					return new JOrchestraHandle(jOrchestraBeanName, methodName, jorchestraParametersType, path,
+							jOrchestraSignal, reliable);
 
 				}).collect(Collectors.toList());
 	}

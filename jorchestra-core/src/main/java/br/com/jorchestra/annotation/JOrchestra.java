@@ -7,6 +7,8 @@ import java.lang.annotation.Target;
 
 import org.springframework.stereotype.Service;
 
+import br.com.jorchestra.canonical.JOrchestraSignal;
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Service
