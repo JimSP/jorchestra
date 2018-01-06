@@ -16,6 +16,7 @@ import br.com.jorchestra.example.canonical.Status;
 import br.com.jorchestra.example.dto.TransferRequest;
 import br.com.jorchestra.example.dto.TransferResponse;
 import br.com.jorchestra.example.dto.TransferResponseBuilder;
+import br.com.jorchestra.example.notification.JOrchestraNotificationEletronicTransferAccount;
 import br.com.jorchestra.example.util.CreateTransferRequest;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -30,6 +31,9 @@ public class ElectronicTransferOfFundsExampleTest {
 	@Mock
 	private DepositIntoAccountExample depositIntoAccount;
 
+	@Mock
+	private JOrchestraNotificationEletronicTransferAccount jOrchestraNotificationEletronicTransferAccount;
+
 	private final TransferRequest transferRequest = CreateTransferRequest.create();
 	private final UUID transferIdentification = transferRequest.getTransferIdentificationUUID();
 
@@ -41,37 +45,51 @@ public class ElectronicTransferOfFundsExampleTest {
 	public void statusSuccessTest() {
 		final Status statusWithdraw = Status.SUCCESS;
 		final Status statusTransfer = Status.SUCCESS;
+		final Status notificationStatus = Status.SUCCESS;
 
-		transferTest(statusWithdraw, statusTransfer);
+		transferTest(statusWithdraw, statusTransfer, notificationStatus);
 	}
-	
+
 	@Test
 	public void statusErrorTest() {
 		final Status statusWithdraw = Status.SUCCESS;
 		final Status statusTransfer = Status.ERROR;
+		final Status notificationStatus = Status.SUCCESS;
 
-		transferTest(statusWithdraw, statusTransfer);
+		transferTest(statusWithdraw, statusTransfer, notificationStatus);
 	}
-	
+
 	@Test
 	public void statusWithdrawErrorTest() {
 		final Status statusWithdraw = Status.ERROR;
 		final Status statusTransfer = Status.ERROR;
+		final Status notificationStatus = Status.SUCCESS;
 
-		transferTest(statusWithdraw, statusTransfer);
+		transferTest(statusWithdraw, statusTransfer, notificationStatus);
 	}
-	
+
 	@Test
 	public void statusWithdrawErrorAndTransferSuccessTest() {
 		final Status statusWithdraw = Status.ERROR;
 		final Status statusTransfer = Status.SUCCESS;
+		final Status notificationStatus = Status.SUCCESS;
 
-		transferTest(statusWithdraw, statusTransfer);
+		transferTest(statusWithdraw, statusTransfer, notificationStatus);
 	}
 
-	private void transferTest(final Status statusWithdraw, final Status statusTransfer) {
+	private void transferTest(final Status statusWithdraw, final Status statusTransfer,
+			final Status notificationStatus) {
+
+		final TransferResponse expectedTransferResponse = TransferResponseBuilder.create()
+				.withStatusWithdraw(statusWithdraw) //
+				.withStatusTransfer(statusWithdraw == Status.SUCCESS ? statusTransfer : Status.SUCCESS) //
+				.withTransferIdentificationUUID(transferIdentification) //
+				.withTransferRequest(transferRequest) //
+				.build();
 
 		Mockito.when(removeFromAccount.toWithdraw(from, value)).thenReturn(statusWithdraw);
+		Mockito.when(jOrchestraNotificationEletronicTransferAccount.account(expectedTransferResponse))
+				.thenReturn(notificationStatus);
 
 		final Boolean statusTransferExpected = Status.isSuccess(statusWithdraw);
 
@@ -82,12 +100,6 @@ public class ElectronicTransferOfFundsExampleTest {
 		}
 
 		final TransferResponse transferResponse = electronicTransferOfFundsExample.transfer(transferRequest);
-
-		final TransferResponse expectedTransferResponse = TransferResponseBuilder.create()
-				.withStatusWithdraw(statusWithdraw) //
-				.withStatusTransfer(statusWithdraw == Status.SUCCESS ? statusTransfer : Status.SUCCESS) //
-				.withTransferIdentificationUUID(transferIdentification) //
-				.build();
 
 		Assert.assertEquals(expectedTransferResponse, transferResponse);
 	}

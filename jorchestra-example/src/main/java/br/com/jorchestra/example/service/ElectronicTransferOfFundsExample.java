@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -46,20 +47,24 @@ public class ElectronicTransferOfFundsExample {
 			statusTransfer = depositIntoAccount.deposit(from, value);
 		}
 
-		final TransferResponse transferResponse = TransferResponse //
-				.create() //
+		final TransferResponse transferResponse = TransferResponse.create() //
 				.withStatusWithdraw(statusWithdraw) //
 				.withStatusTransfer(statusTransfer) //
 				.setTransferIdentification(transferRequest.getTransferIdentification()) //
 				.withTransferRequest(transferRequest) //
 				.build();
 
-		try {
-			jOrchestraNotificationEletronicTransferAccount.account(transferResponse);
-		} catch (JsonProcessingException e) {
-			LOGGER.warn("m=transfer, transferRequest=" + transferRequest, e);
-		}
+		final Status statusNotification = jOrchestraNotificationEletronicTransferAccount.account(transferResponse);
+
+		//poderia persistir async em um SGDB...
+		log(transferResponse, statusNotification);
 
 		return transferResponse;
+	}
+
+	// @Async
+	// @Transaction
+	private void log(final TransferResponse transferResponse, final Status statusNotification) {
+		LOGGER.info("m=persist, transferResponse=" + transferResponse, ", statusNotification=" + statusNotification);
 	}
 }
