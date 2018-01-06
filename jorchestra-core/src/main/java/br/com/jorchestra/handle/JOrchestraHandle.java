@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.jorchestra.annotation.JOrchestraSignal;
+
 public final class JOrchestraHandle {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraHandle.class);
@@ -22,11 +24,16 @@ public final class JOrchestraHandle {
 	private final String jOrchestraBeanName;
 	private final Method method;
 	private final String path;
+	private final JOrchestraSignal jOrchestraSignal;
+	private final Boolean realiable;
 
-	public JOrchestraHandle(final String jOrchestraBeanName, final Method method, final String path) {
+	public JOrchestraHandle(final String jOrchestraBeanName, final Method method, final String path,
+			final JOrchestraSignal jOrchestraSignal, final Boolean realiable) {
 		this.jOrchestraBeanName = jOrchestraBeanName;
 		this.method = method;
 		this.path = path;
+		this.jOrchestraSignal = jOrchestraSignal;
+		this.realiable = realiable;
 	}
 
 	public String getjOrchestraBeanName() {
@@ -47,6 +54,14 @@ public final class JOrchestraHandle {
 
 	public String getJOrchestraPath() {
 		return String.format("/%s-%s", getPath(), getMethodName());
+	}
+
+	public JOrchestraSignal getjOrchestraSignal() {
+		return jOrchestraSignal;
+	}
+
+	public Boolean isReliable() {
+		return realiable;
 	}
 
 	public String getJOrchestraRequestTemplate() {

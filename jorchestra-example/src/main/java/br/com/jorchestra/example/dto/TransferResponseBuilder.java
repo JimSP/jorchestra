@@ -17,11 +17,11 @@ public final class TransferResponseBuilder {
 	private UUID transferIdentification;
 	private Status statusWithdraw;
 	private Status statusTransfer;
+	private TransferRequest transferRequest;
 
 	/**
-	 * nao usar prefixo with nesse caso.
-	 * o prefixo with será chamado pelo JOrchestraHandle
-	 * e tentará documentar esse campo.
+	 * nao usar prefixo with nesse caso. o prefixo with será chamado pelo
+	 * JOrchestraHandle e tentará documentar esse campo.
 	 * 
 	 * Esse campo já é documentado pelo método withTransferIdentificationUUID.
 	 * 
@@ -48,7 +48,12 @@ public final class TransferResponseBuilder {
 		return this;
 	}
 
+	public TransferResponseBuilder withTransferRequest(final TransferRequest transferRequest) {
+		this.transferRequest = transferRequest;
+		return this;
+	}
+
 	public TransferResponse build() {
-		return new TransferResponse(transferIdentification, statusWithdraw, statusTransfer);
+		return new TransferResponse(transferIdentification, statusWithdraw, statusTransfer, transferRequest);
 	}
 }

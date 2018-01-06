@@ -28,7 +28,7 @@ public enum JOrchestaType {
 	BIG_DECIMAL(BigDecimal.class, "99999999999999999999999999999999999999999999999999999999.99"), //
 	TIME(Time.class, "23:59:59"), //
 	DATE(Date.class, new Date(System.currentTimeMillis())), //
-	STRING(String.class, "JOrquestra :-)"), //
+	STRING(String.class, "JOrchestra :-)"), //
 
 	@SuppressWarnings("rawtypes")
 	ARRAY(List.class, new ArrayList()), //

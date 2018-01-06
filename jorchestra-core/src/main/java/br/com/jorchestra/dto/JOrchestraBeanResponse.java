@@ -1,9 +1,9 @@
 package br.com.jorchestra.dto;
 
-public class JOrquestraBeanResponse {
+public class JOrchestraBeanResponse {
 	
-	public static JOrquestraMonitorResponseBuilder create() {
-		return JOrquestraMonitorResponseBuilder.create();
+	public static JOrchestraMonitorResponseBuilder create() {
+		return JOrchestraMonitorResponseBuilder.create();
 	}
 
 	private final String jOrchestraBeanName;
@@ -11,7 +11,7 @@ public class JOrquestraBeanResponse {
 	private final String requestTemplate;
 	private final String responseTemplate;
 
-	public JOrquestraBeanResponse(final String jOrchestraBeanName, final String jOrchestraPah, final String requestTemplate, final String responseTemplate) {
+	public JOrchestraBeanResponse(final String jOrchestraBeanName, final String jOrchestraPah, final String requestTemplate, final String responseTemplate) {
 		super();
 		this.jOrchestraBeanName = jOrchestraBeanName;
 		this.jOrchestraPah = jOrchestraPah;
@@ -37,7 +37,7 @@ public class JOrquestraBeanResponse {
 
 	@Override
 	public String toString() {
-		return "JOrquestraMonitorResponse [jOrchestraBeanName=" + jOrchestraBeanName + ", jOrchestraPah="
+		return "JOrchestraBeanResponse [jOrchestraBeanName=" + jOrchestraBeanName + ", jOrchestraPah="
 				+ jOrchestraPah + ", requestTemplate=" + requestTemplate + ", responseTemplate=" + responseTemplate
 				+ "]";
 	}

@@ -2,6 +2,7 @@ package br.com.jorchestra.util;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import com.hazelcast.util.function.Consumer;
 
 import br.com.jorchestra.annotation.JOrchestra;
+import br.com.jorchestra.annotation.JOrchestraSignal;
 import br.com.jorchestra.handle.JOrchestraHandle;
 
 public class JOrchestraContextUtils {
@@ -28,30 +30,37 @@ public class JOrchestraContextUtils {
 		APPLICATION_CONTEXT = applicationContext;
 	}
 
-	public static void jorchestraHandleConsumer(final Consumer<JOrchestraHandle> consumer) {
-		jorchestraHandleConsumer(APPLICATION_CONTEXT, consumer);
+	public static List<JOrchestraHandle> jorchestraHandleConsumer(final Consumer<JOrchestraHandle> consumer) {
+		return jorchestraHandleConsumer(APPLICATION_CONTEXT, consumer);
 	}
-	
+
 	public static Map<String, Object> loadJOrchestraBeans() {
 		return loadJOrchestraBeans(APPLICATION_CONTEXT);
 	}
-	
+
 	public static Method getMethosByJOrchestraPath(final Object jOrchestraBean, final String methodName,
 			final Class<?>[] parameters) throws NoSuchMethodException, SecurityException {
 		return jOrchestraBean.getClass().getMethod(methodName, parameters);
 	}
 
-	public static void jorchestraHandleConsumer(final ApplicationContext applicationContext,
+	public static List<JOrchestraHandle> jorchestraHandleConsumer(final ApplicationContext applicationContext,
 			final Consumer<JOrchestraHandle> consumer) {
-		final Map<String, Object> map = JOrchestraContextUtils.loadJOrchestraBeans(applicationContext);
-
-		map.entrySet().parallelStream().forEach(entry -> {
-			mapToJListOrchestraHandle(entry) //
-					.parallelStream() //
-					.forEach(jOrchestraHandle -> { //
-						consumer.accept(jOrchestraHandle);
-					});
-		});
+		
+		final List<JOrchestraHandle> list = new ArrayList<>();
+		
+		JOrchestraContextUtils.loadJOrchestraBeans(applicationContext) //
+				.entrySet() //
+				.parallelStream() //
+				.forEach(entry -> {
+					mapToJListOrchestraHandle(entry) //
+							.parallelStream() //
+							.forEach(jOrchestraHandle -> { //
+								consumer.accept(jOrchestraHandle);
+								list.add(jOrchestraHandle);
+							});
+				});
+		
+		return list;
 	}
 
 	public static List<JOrchestraHandle> mapToJListOrchestraHandle(final ApplicationContext applicationContext,
@@ -67,8 +76,10 @@ public class JOrchestraContextUtils {
 					final JOrchestra jOrchestra = jOrchestraBean.getClass().getDeclaredAnnotation(JOrchestra.class);
 
 					final String path = jOrchestra.path();
+					final JOrchestraSignal jOrchestraSignal = jOrchestra.jOrchestraSignal();
+					final Boolean reliable = jOrchestra.reliable();
 
-					return new JOrchestraHandle(jOrchestraBeanName, method, path);
+					return new JOrchestraHandle(jOrchestraBeanName, method, path, jOrchestraSignal, reliable);
 
 				}).collect(Collectors.toList());
 	}

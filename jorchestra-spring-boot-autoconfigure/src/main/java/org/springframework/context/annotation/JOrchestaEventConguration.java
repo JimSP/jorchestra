@@ -1,7 +1,9 @@
 package org.springframework.context.annotation;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -9,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
@@ -19,6 +20,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
+import br.com.jorchestra.dto.JOrchestraSystemEvent;
 
 @Configuration
 @DependsOn(value = { "jOrchestraAutoConfiguration" })
@@ -28,13 +30,11 @@ public class JOrchestaEventConguration {
 
 	private static class SaledClass {
 		@SuppressWarnings("unchecked")
-		private static Class<Consumer<ApplicationEvent>> EVENT_LISTENER_SAFE_HANDLE = (Class<Consumer<ApplicationEvent>>) SaledClass
+		private static Class<List<Consumer<JOrchestraSystemEvent>>> EVENT_LISTENER_SAFE_HANDLE = (Class<List<Consumer<JOrchestraSystemEvent>>>) SaledClass
 				.createClassTemplateEventLister().getClass();
 
-		private static Consumer<ApplicationEvent> createClassTemplateEventLister() {
-			return (event) -> {
-				throw new RuntimeException("not executable!");
-			};
+		private static List<Consumer<JOrchestraSystemEvent>> createClassTemplateEventLister() {
+			return new ArrayList<>();
 		}
 	}
 
@@ -49,14 +49,9 @@ public class JOrchestaEventConguration {
 		return Hazelcast.getHazelcastInstanceByName(jorchestraConfigurationProperties.getClusterName());
 	}
 
-	@Bean("jORquestraEventMaps")
-	public Map<Class<?>, Consumer<ApplicationEvent>> jORquestraEventMaps() {
+	@Bean("jOrchestraEventMaps")
+	public Map<Class<?>, List<Consumer<JOrchestraSystemEvent>>> jOrchestraEventMaps() {
 		return Collections.synchronizedMap(hashMap());
-	}
-
-	@Bean
-	public JOrchestraEventListener jOrchestraEventListener() {
-		return new JOrchestraEventListener();
 	}
 
 	@Bean
@@ -66,24 +61,36 @@ public class JOrchestaEventConguration {
 		return eventMulticaster;
 	}
 
-	private Map<Class<?>, Consumer<ApplicationEvent>> hashMap() {
-		final Map<Class<?>, Consumer<ApplicationEvent>> map = new HashMap<>();
-		map.put(ContextClosedEvent.class, (event) -> {
-			LOGGER.info("m=accpet, JOrquestraName=" + jorchestraConfigurationProperties.getName() + ", msg=\"JOrchestra bye!");
+	private Map<Class<?>, List<Consumer<JOrchestraSystemEvent>>> hashMap() {
+		final Map<Class<?>, List<Consumer<JOrchestraSystemEvent>>> map = new HashMap<>();
+
+		final List<Consumer<JOrchestraSystemEvent>> list = new ArrayList<>();
+		list.add((event) -> {
+			LOGGER.info("m=accpet, JOrchestraName=" + jorchestraConfigurationProperties.getName()
+					+ ", msg=\"JOrchestra bye!");
 			hazelcastInstance().shutdown();
 		});
+		
+		map.put(ContextClosedEvent.class, list);
 
-		final Map<String, String> eventClassList = jorchestraConfigurationProperties.getEventsClassMap();
-		eventClassList.entrySet().iterator().forEachRemaining(entry -> {
-			final Consumer<ApplicationEvent> eventListener = applicationContext.getBean(entry.getValue(),
-					SaledClass.EVENT_LISTENER_SAFE_HANDLE);
-			try {
-				map.put(Class.forName(entry.getKey()), eventListener);
-			} catch (ClassNotFoundException e) {
-				LOGGER.warn("m=jORquestraEventMaps, msg=\"create eventMap not put" + entry.getKey()
-						+ ", verify correct class name in of your application.properties file!", e);
-			}
-		});
+		final Map<String, List<String>> eventClassList = jorchestraConfigurationProperties.getEventsClassMap();
+		eventClassList.entrySet() //
+				.parallelStream() //
+				.forEach(entry -> {
+					entry.getValue() //
+							.parallelStream() //
+							.forEach(action -> {
+								final List<Consumer<JOrchestraSystemEvent>> eventListenerList = applicationContext
+										.getBean(action, SaledClass.EVENT_LISTENER_SAFE_HANDLE);
+								try {
+									map.put(Class.forName(entry.getKey()), eventListenerList);
+								} catch (ClassNotFoundException e) {
+									LOGGER.warn("m=jOrchestraEventMaps, msg=\"create eventMap not put" + entry.getKey()
+											+ ", verify correct class name in of your application.properties file!", e);
+								}
+							});
+
+				});
 
 		return map;
 	}

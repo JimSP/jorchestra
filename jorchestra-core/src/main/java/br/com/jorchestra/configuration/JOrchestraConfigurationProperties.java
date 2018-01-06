@@ -1,6 +1,7 @@
 package br.com.jorchestra.configuration;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,10 +14,10 @@ public class JOrchestraConfigurationProperties {
 	private String clusterName;
 	private String allowedOrigins;
 	private Integer poolSize;
-	private Map<String, String> eventsClassMap;
+	private Map<String, List<String>> eventsClassMap;
 
 	public String getName() {
-		return name == null ? "JOrquestra-DEV" : name;
+		return name == null ? "JOrchestra-DEV" : name;
 	}
 
 	public void setName(String name) {
@@ -55,11 +56,11 @@ public class JOrchestraConfigurationProperties {
 		this.poolSize = poolSize;
 	}
 
-	public Map<String, String> getEventsClassMap() {
+	public Map<String, List<String>> getEventsClassMap() {
 		return eventsClassMap == null ? Collections.emptyMap() : eventsClassMap;
 	}
 
-	public void setEventsClassMap(Map<String, String> getEventsClassMap) {
+	public void setEventsClassMap(Map<String, List<String>> getEventsClassMap) {
 		this.eventsClassMap = getEventsClassMap;
 	}
 

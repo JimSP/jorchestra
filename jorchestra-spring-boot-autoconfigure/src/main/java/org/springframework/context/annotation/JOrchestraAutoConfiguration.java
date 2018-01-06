@@ -1,5 +1,7 @@
 package org.springframework.context.annotation;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +15,11 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 import com.hazelcast.config.Config;
-import com.hazelcast.config.ExecutorConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IExecutorService;
 
+import br.com.jorchestra.annotation.JOrchestraSignal;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
-import br.com.jorchestra.controller.JOrchestraWebSocketController;
 import br.com.jorchestra.handle.JOrchestraHandle;
 import br.com.jorchestra.service.JOrchestraBeans;
 import br.com.jorchestra.util.JOrchestraContextUtils;
@@ -36,19 +36,42 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 	private ApplicationContext applicationContext;
 
 	@Autowired
-	private JOrchestraConfigurationProperties jorchestraConfigurationProperties;
+	private JOrchestraConfigurationProperties jOrchestraConfigurationProperties;
 
 	@Bean
 	public JOrchestraBeans JOrchestraBeans() {
 		return new JOrchestraBeans();
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public void registerWebSocketHandlers(final WebSocketHandlerRegistry registry) {
+	public void registerWebSocketHandlers(final WebSocketHandlerRegistry webSocketHandlerRegistry) {
 		LOGGER.info("m=registerWebSocketHandlers");
 		JOrchestraContextUtils.setApplicationContext(applicationContext);
-		JOrchestraContextUtils.jorchestraHandleConsumer( //
-				(jOrchestraHandle) -> registerJOrchestraPath(registry, jOrchestraHandle));
+		final Config config = hazelCastConfig(jOrchestraConfigurationProperties.getClusterName());
+
+		final List<JOrchestraHandle> list = JOrchestraContextUtils.jorchestraHandleConsumer( //
+				(jOrchestraHandle) -> {
+					final JOrchestraSignal jOrchestraSignal = jOrchestraHandle.getjOrchestraSignal();
+
+					registerJOrchestraPath(jOrchestraHandle, config, jOrchestraSignal);
+				});
+
+		final HazelcastInstance hazelcastInstance = hazelcastInstance(config);
+
+		list.forEach(jOrchestraHandle -> {
+			final String jorchestraPath = jOrchestraHandle.getJOrchestraPath();
+			final JOrchestraSignal jOrchestraSignal = jOrchestraHandle.getjOrchestraSignal();
+			final Boolean reliable = jOrchestraHandle.isReliable();
+			final Class<?> messageType = jOrchestraSignal.getMessageType();
+			final Class classType = jOrchestraSignal.getClassType();
+
+			final Object iService = jOrchestraSignal.createService(jorchestraPath, reliable, hazelcastInstance,
+					messageType, classType);
+
+			jOrchestraSignal.register(jorchestraPath, jOrchestraHandle, webSocketHandlerRegistry,
+					jOrchestraConfigurationProperties, iService);
+		});
 	}
 
 	@Override
@@ -57,49 +80,19 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 		configurer.enable();
 	}
 
-	private HazelcastInstance hazelcastInstance(final Config config) {
-		LOGGER.info("m=hazelcastInstance, config=" + config);
-		return Hazelcast.getOrCreateHazelcastInstance(config);
+	private void registerJOrchestraPath(final JOrchestraHandle jOrchestraHandle, final Config config,
+			final JOrchestraSignal jOrchestraSignal) {
+		final String jorchestraPath = jOrchestraHandle.getJOrchestraPath();
+		LOGGER.info("m=registerJOrchestraPath, jorchestraPath=" + jorchestraPath);
+		jOrchestraSignal.addConfig(jorchestraPath, config);
 	}
 
-	private Config hazelCastConfig(final String memberName) {
+	private static Config hazelCastConfig(final String memberName) {
 		final Config config = new Config(memberName);
 		return config;
 	}
 
-	private void registerJOrchestraPath(final WebSocketHandlerRegistry registry,
-			final JOrchestraHandle jOrchestraHandle) {
-
-		final String jorchestraPath = jOrchestraHandle.getJOrchestraPath();
-
-		LOGGER.info("m=registerJOrchestraPath, jorchestraPath=" + jorchestraPath);
-
-		final Config config = hazelCastConfig(jorchestraConfigurationProperties.getClusterName());
-
-		config.addExecutorConfig(createExecutorConfig(jorchestraPath));
-
-		final HazelcastInstance hazelcastInstance = hazelcastInstance(config);
-
-		final IExecutorService executorService = createExecutorService(jorchestraPath, hazelcastInstance);
-
-		final JOrchestraWebSocketController jOrchestraWebSocketController = jOrchestraWebSocketController(
-				jOrchestraHandle, executorService);
-
-		registry.addHandler(jOrchestraWebSocketController, jorchestraPath) //
-				.setAllowedOrigins(jorchestraConfigurationProperties.getAllowedOrigins());
-	}
-
-	private ExecutorConfig createExecutorConfig(final String jorchestraPath) {
-		return new ExecutorConfig(jorchestraPath);
-	}
-
-	private <T> IExecutorService createExecutorService(final String jorchestraPath,
-			final HazelcastInstance hazelcastInstance) {
-		return hazelcastInstance.getExecutorService(jorchestraPath);
-	}
-
-	private JOrchestraWebSocketController jOrchestraWebSocketController(final JOrchestraHandle jOrchestraHandle,
-			final IExecutorService executorService) {
-		return new JOrchestraWebSocketController(jOrchestraHandle, executorService);
+	private static HazelcastInstance hazelcastInstance(final Config config) {
+		return Hazelcast.getOrCreateHazelcastInstance(config);
 	}
 }

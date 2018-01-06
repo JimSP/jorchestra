@@ -1,12 +1,10 @@
 package br.com.jorchestra.controller;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,45 +13,56 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hazelcast.core.IExecutorService;
+import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Message;
+import com.hazelcast.core.MessageListener;
 
-import br.com.jorchestra.callable.JOrchestraCallable;
+import br.com.jorchestra.dto.JOrchestraNotification;
 import br.com.jorchestra.handle.JOrchestraHandle;
 
-public class JOrchestraWebSocketController extends TextWebSocketHandler {
+public class JOrchestraNotificationWebSocketController extends TextWebSocketHandler
+		implements MessageListener<JOrchestraNotification> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraWebSocketController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraEventWebSocketController.class);
+
+	private final Map<String, WebSocketSession> webSocketSessionMap = Collections.synchronizedMap(new HashMap<>());
 
 	private final JOrchestraHandle jOrchestraHandle;
-	private final IExecutorService executorService;
+	private final ITopic<JOrchestraNotification> JOrchestraTopicNotification;
 
-	public JOrchestraWebSocketController(final JOrchestraHandle jOrchestraHandle,
-			final IExecutorService executorService) {
+	public JOrchestraNotificationWebSocketController(final JOrchestraHandle jOrchestraHandle,
+			final ITopic<JOrchestraNotification> JOrchestraTopicNotification) {
 		this.jOrchestraHandle = jOrchestraHandle;
-		this.executorService = executorService;
+		this.JOrchestraTopicNotification = JOrchestraTopicNotification;
 	}
 
 	@Override
-	public void handleTextMessage(final WebSocketSession webSocketSession, final TextMessage textMessage)
+	public void onMessage(final Message<JOrchestraNotification> message) {
+		webSocketSessionMap.entrySet().parallelStream().forEach(action -> {
+			try {
+				sendEnvent(action.getValue(), message.getMessageObject());
+			} catch (IOException e) {
+				LOGGER.error("m=onMessage, message=" + message, e);
+			}
+		});
+	}
+
+	@Override
+	public void handleTextMessage(final WebSocketSession webSocketSession, final TextMessage binaryMessage)
 			throws Exception {
 		final String sessionId = webSocketSession.getId();
-		final String payload = textMessage.getPayload();
+		final String payload = binaryMessage.getPayload();
 		final UUID requestId = UUID.randomUUID();
-		final String logMsg = "m=handleTextMessage, webSocketSession.id=" + sessionId + ", textMessage.payload="
+		final String logMsg = "m=handleBinaryMessage, webSocketSession.id=" + sessionId + ", binaryMessage.payload="
 				+ payload + ", requestId=" + requestId.toString() + ", path=" + jOrchestraHandle.getPath() + ", method="
 				+ jOrchestraHandle.getMethod();
 
 		LOGGER.debug(logMsg);
-
-		try {
-			invokeJOrchestraBean(webSocketSession, payload);
-		} catch (Throwable t) {
-			logError(new RuntimeException(t));
-		}
+		final ObjectMapper objectMapper = new ObjectMapper();
+		final JOrchestraNotification object = objectMapper.readValue(payload, JOrchestraNotification.class);
+		JOrchestraTopicNotification.publish(object);
 	}
 
 	@Override
@@ -65,11 +74,7 @@ public class JOrchestraWebSocketController extends TextWebSocketHandler {
 				+ jOrchestraHandle.getMethod();
 
 		LOGGER.debug(logMsg);
-		try {
-			super.afterConnectionEstablished(webSocketSession);
-		} catch (Exception e) {
-			logError(e);
-		}
+		webSocketSessionMap.put(sessionId, webSocketSession);
 	}
 
 	@Override
@@ -85,12 +90,7 @@ public class JOrchestraWebSocketController extends TextWebSocketHandler {
 				+ jOrchestraHandle.getPath() + ", method=" + jOrchestraHandle.getMethod();
 
 		LOGGER.debug(logMsg);
-
-		try {
-			super.afterConnectionClosed(webSocketSession, closeStatus);
-		} catch (Exception e) {
-			logError(e);
-		}
+		webSocketSessionMap.remove(sessionId);
 	}
 
 	@Override
@@ -102,36 +102,10 @@ public class JOrchestraWebSocketController extends TextWebSocketHandler {
 				+ ", path=" + jOrchestraHandle.getPath() + ", method=" + jOrchestraHandle.getMethod();
 
 		LOGGER.debug(logMsg, e);
-
 		webSocketSession.close(CloseStatus.SERVER_ERROR);
 	}
 
-	private void invokeJOrchestraBean(final WebSocketSession webSocketSession, final String payload)
-			throws IllegalAccessException, InvocationTargetException, IOException, JsonParseException,
-			JsonMappingException, JsonProcessingException, InterruptedException, ExecutionException {
-
-		final ObjectMapper objectMapper = new ObjectMapper();
-		final Class<?>[] parameterTypes = jOrchestraHandle.getMethod().getParameterTypes();
-
-		final List<Object> list = new ArrayList<>();
-		for (Class<?> parameterClass : parameterTypes) {
-			final Object parameter = objectMapper.readValue(payload, parameterClass);
-			list.add(parameter);
-		}
-
-		final JOrchestraCallable JOrchestraCallable = new JOrchestraCallable(jOrchestraHandle.getjOrchestraBeanName(),
-				jOrchestraHandle.getMethodName(), jOrchestraHandle.getMethod().getParameterTypes(), list.toArray());
-		final Future<Object> future = executorService.submit(JOrchestraCallable);
-
-		try {
-			final Object result = future.get();
-			sendCallback(webSocketSession, result);
-		} catch (Exception e) {
-			logError(e);
-		}
-	}
-
-	private void sendCallback(final WebSocketSession webSocketSession, final Object object)
+	private void sendEnvent(final WebSocketSession webSocketSession, final Object object)
 			throws IOException, JsonProcessingException {
 		final ObjectMapper objectMapper = new ObjectMapper();
 		final String payload = objectMapper.writeValueAsString(object);
@@ -139,7 +113,4 @@ public class JOrchestraWebSocketController extends TextWebSocketHandler {
 		webSocketSession.sendMessage(new TextMessage(payload));
 	}
 
-	private void logError(final Exception e) throws IOException, JsonProcessingException {
-		LOGGER.error("m=sendCallback", e);
-	}
 }

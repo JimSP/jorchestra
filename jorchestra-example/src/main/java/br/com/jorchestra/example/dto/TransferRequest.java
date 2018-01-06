@@ -23,9 +23,8 @@ public final class TransferRequest implements Serializable {
 	private final Account to;
 	private final BigDecimal value;
 
-	@JsonCreator
-	public TransferRequest(@JsonProperty("from") final Account from, @JsonProperty("to") final Account to,
-			@JsonProperty("value") final BigDecimal value) {
+	public TransferRequest(final Account from, final Account to,
+			final BigDecimal value) {
 		this.transferIdentification = UUID.randomUUID();
 		this.from = from;
 		this.to = to;

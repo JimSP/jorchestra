@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import br.com.jorchestra.annotation.JOrchestra;
-import br.com.jorchestra.dto.JOrquestraBeanResponse;
+import br.com.jorchestra.dto.JOrchestraBeanResponse;
 import br.com.jorchestra.util.JOrchestraContextUtils;
 
 @JOrchestra(path = "jorchestra")
@@ -16,11 +16,11 @@ public class JOrchestraBeans {
 	@Autowired
 	private ApplicationContext applicationContext;
 
-	public List<JOrquestraBeanResponse> beans() {
-		final List<JOrquestraBeanResponse> list = new ArrayList<>();
+	public List<JOrchestraBeanResponse> beans() {
+		final List<JOrchestraBeanResponse> list = new ArrayList<>();
 
 		JOrchestraContextUtils.jorchestraHandleConsumer(applicationContext,
-				jOrchestraHandle -> list.add(JOrquestraBeanResponse.create() //
+				jOrchestraHandle -> list.add(JOrchestraBeanResponse.create() //
 						.withjOrchestraBeanName(jOrchestraHandle.getjOrchestraBeanName()) //
 						.withjOrchestraPah(jOrchestraHandle.getJOrchestraPath()) //
 						.withRequestTemplate(jOrchestraHandle.getJOrchestraRequestTemplate()) //

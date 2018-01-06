@@ -14,4 +14,7 @@ public @interface JOrchestra {
 
 	public String path();
 
+	public JOrchestraSignal jOrchestraSignal() default JOrchestraSignal.MESSAGE;
+
+	public boolean reliable() default true;
 }
