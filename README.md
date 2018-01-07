@@ -40,15 +40,15 @@ microcontainer para distribuição de execuções, eventos e notificaçes em tem
   - Exemplo de uso para eventos distribuídos:
   
     	@JOrchestra(path = "events", jOrchestraSignal = JOrchestraSignal.EVENT) --B1
-  	  public class DistributedEvent implements Consumer<EventType>{--B2
-	    
-	    @Autowired
-		  private HazelcastInstance hazelcastInstance; --B3
+    	public class DistributedEvent implements Consumer<EventType>{--B2
+
+  	  @Autowired
+  	  private HazelcastInstance hazelcastInstance; --B3
 	    
 	    @Override
-		  public void accept(final EventType eventType) { --B4
-	      final ITopic<EventType> topic = hazelcastInstance.getTopic("/events-accept"); -- B5
-				topic.publish(eventType); --B6
+	    public void accept(final EventType eventType) { --B4
+	        final ITopic<EventType> topic = hazelcastInstance.getTopic("/events-accept"); -- B5
+		topic.publish(eventType); --B6
 	    }
     	}
   
@@ -73,11 +73,11 @@ microcontainer para distribuição de execuções, eventos e notificaçes em tem
     	public class DistributedNotification{
     
     	@Autowired
-		private HazelcastInstance hazelcastInstance; --C2
+    	private HazelcastInstance hazelcastInstance; --C2
     
 	    public void onNotify(final Notification notification) { --C3
 	      final ITopic<JOrchestraNotification> topic = hazelcastInstance.getTopic("/notification-onNotify"); --C4
-			  topic.publish(new JOrchestraNotification(TransferResponse.class.getName(), messageData)); --C5
+	      topic.publish(new JOrchestraNotification(TransferResponse.class.getName(), messageData)); --C5
 	    }
     	}
   
@@ -116,7 +116,11 @@ microcontainer para distribuição de execuções, eventos e notificaçes em tem
   Esse payload foi enviado quando uma conexão foi estabelecida no path "jorchestra-beans", enviado um payload e encerrada a conexão.
   
 	  {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#4a4d39e6-4342-489e-8d21-e04d461ff815","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"4a4d39e6-4342-489e-8d21-e04d461ff815","beginTimestamp":1515344992534,"endTimestamp":null,"jOrchestraState":"SESSION_OPEN","payload":null}
-    	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#b78d1c6a-a080-4ffc-8fa8-8b872272897a","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"b78d1c6a-a080-4ffc-8fa8-8b872272897a","beginTimestamp":null,"endTimestamp":null,"jOrchestraState":"DATA_WAITING","payload":""}
-    	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#a230de4a-8aac-4953-8059-82783d26e672","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"a230de4a-8aac-4953-8059-82783d26e672","beginTimestamp":1515344997551,"endTimestamp":null,"jOrchestraState":"DATA_PROCESSING","payload":""}
+    	
+  	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#b78d1c6a-a080-4ffc-8fa8-8b872272897a","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"b78d1c6a-a080-4ffc-8fa8-8b872272897a","beginTimestamp":null,"endTimestamp":null,"jOrchestraState":"DATA_WAITING","payload":""}
+    	
+  	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#a230de4a-8aac-4953-8059-82783d26e672","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"a230de4a-8aac-4953-8059-82783d26e672","beginTimestamp":1515344997551,"endTimestamp":null,"jOrchestraState":"DATA_PROCESSING","payload":""}
+  	
   	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#5bffcc48-d95b-470f-b4dd-6c4cfe34f605","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"5bffcc48-d95b-470f-b4dd-6c4cfe34f605","beginTimestamp":null,"endTimestamp":1515344997691,"jOrchestraState":"DATA_SUCCESS","payload":""}
+  	
   	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#979f3728-1684-444e-9d05-880011ac889a","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"979f3728-1684-444e-9d05-880011ac889a","beginTimestamp":null,"endTimestamp":1515345000688,"jOrchestraState":"SESSION_CLOSE","payload":null}
