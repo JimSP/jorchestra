@@ -19,7 +19,7 @@ import com.hazelcast.core.MessageListener;
 
 import br.com.jorchestra.canonical.JOrchestraStateCall;
 
-public class JOrchestraMonitorWebSocket extends TextWebSocketHandler
+public final class JOrchestraMonitorWebSocket extends TextWebSocketHandler
 		implements MessageListener<JOrchestraStateCall> {
 	
 	protected final Map<String, WebSocketSession> webSocketSessionMap = Collections

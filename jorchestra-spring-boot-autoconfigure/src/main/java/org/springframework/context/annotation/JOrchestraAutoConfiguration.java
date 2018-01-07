@@ -24,6 +24,7 @@ import br.com.jorchestra.canonical.JOrchestraHandle;
 import br.com.jorchestra.canonical.JOrchestraSignal;
 import br.com.jorchestra.canonical.JOrchestraStateCall;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
+import br.com.jorchestra.controller.JOrchestraAdminWebSocket;
 import br.com.jorchestra.controller.JOrchestraMonitorWebSocket;
 import br.com.jorchestra.service.JOrchestraBeans;
 import br.com.jorchestra.util.JOrchestraContextUtils;
@@ -51,7 +52,12 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 	@Override
 	public void registerWebSocketHandlers(final WebSocketHandlerRegistry webSocketHandlerRegistry) {
 		LOGGER.info("m=registerWebSocketHandlers");
+
 		JOrchestraContextUtils.setApplicationContext(applicationContext);
+
+		final JOrchestraMonitorWebSocket jOrchestraMonitorWebSocket = new JOrchestraMonitorWebSocket();
+		final JOrchestraAdminWebSocket jOrchestraAdminWebSocket = new JOrchestraAdminWebSocket(jOrchestraConfigurationProperties, JOrchestraContextUtils.getExecutorServiceMap());
+		
 		final Config config = hazelCastConfig(jOrchestraConfigurationProperties.getClusterName());
 
 		final List<JOrchestraHandle> list = JOrchestraContextUtils.jorchestraHandleConsumer( //
@@ -59,13 +65,11 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 					final JOrchestraSignal jOrchestraSignal = jOrchestraHandle.getjOrchestraSignal();
 					registerJOrchestraPath(jOrchestraHandle, config, jOrchestraSignal);
 				});
-
-		final JOrchestraMonitorWebSocket JOrchestraMonitorWebSocket = new JOrchestraMonitorWebSocket();
 		
 		final HazelcastInstance hazelcastInstance = hazelcastInstance(config);
 		final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic = hazelcastInstance
 				.getReliableTopic("jOrchestraStateCallTopic");
-		jOrchestraStateCallTopic.addMessageListener(JOrchestraMonitorWebSocket);
+		jOrchestraStateCallTopic.addMessageListener(jOrchestraMonitorWebSocket);
 
 		list.forEach(jOrchestraHandle -> {
 			final String jorchestraPath = jOrchestraHandle.getJOrchestraPath();
@@ -82,7 +86,11 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 		});
 
 		webSocketHandlerRegistry //
-				.addHandler(JOrchestraMonitorWebSocket, "jOrchestra-monitor") //
+				.addHandler(jOrchestraMonitorWebSocket, "jOrchestra-monitor") //
+				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
+		
+		webSocketHandlerRegistry //
+				.addHandler(jOrchestraAdminWebSocket, "jOrchestra-admin")
 				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
 	}
 

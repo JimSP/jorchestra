@@ -16,6 +16,7 @@ import br.com.jorchestra.controller.JOrchestraMessageWebSocketController;
 import br.com.jorchestra.controller.JOrchestraNotificationWebSocketController;
 import br.com.jorchestra.dto.JOrchestraNotification;
 import br.com.jorchestra.dto.JOrchestraSystemEvent;
+import br.com.jorchestra.util.JOrchestraContextUtils;
 
 public enum JOrchestraSignal {
 
@@ -50,7 +51,7 @@ public enum JOrchestraSignal {
 
 			final JOrchestraMessageWebSocketController jOrchestraWebSocketController = new JOrchestraMessageWebSocketController(
 					jOrchestraHandle, jOrchestraStateCallTopic, jOrchestraConfigurationProperties,
-					(IExecutorService) iService);
+					(IExecutorService) iService, JOrchestraContextUtils.getExecutorServiceMap());
 
 			webSocketHandlerRegistry.addHandler(jOrchestraWebSocketController, jorchestraPath) //
 					.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());

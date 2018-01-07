@@ -4,10 +4,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
@@ -17,10 +19,17 @@ import com.hazelcast.util.function.Consumer;
 import br.com.jorchestra.annotation.JOrchestra;
 import br.com.jorchestra.canonical.JOrchestraHandle;
 import br.com.jorchestra.canonical.JOrchestraSignal;
+import br.com.jorchestra.canonical.JOrchestraStateCall;
 
 public class JOrchestraContextUtils {
 
 	private static ApplicationContext APPLICATION_CONTEXT;
+	private static Map<String, Map<JOrchestraStateCall, Future<Object>>> EXECUTOR_SERVICE_MAP = Collections
+			.synchronizedMap(new HashMap<>());
+
+	public static Map<String, Map<JOrchestraStateCall, Future<Object>>> getExecutorServiceMap() {
+		return EXECUTOR_SERVICE_MAP;
+	}
 
 	public static Object getJorchestraBean(final String jOrchestraBeanName) {
 		return APPLICATION_CONTEXT.getBean(jOrchestraBeanName);

@@ -27,7 +27,9 @@ public abstract class JOrchestraWebSocketTemplate extends TextWebSocketHandler {
 
 	protected final Map<String, WebSocketSession> webSocketSessionMap = Collections
 			.synchronizedMap(new HashMap<>());
+	
 	protected final Map<String, List<String>> jOrchestraSessionMap = Collections.synchronizedMap(new HashMap<>());
+	
 	protected final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic;
 
 	protected final JOrchestraConfigurationProperties jOrchestraConfigurationProperties;

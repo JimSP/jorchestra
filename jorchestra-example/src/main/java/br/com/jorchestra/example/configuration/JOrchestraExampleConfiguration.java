@@ -28,5 +28,4 @@ public class JOrchestraExampleConfiguration {
 	public JOrchestraRegisterSystemEvents JOrchestraRegisterSystemEvents() {
 		return new JOrchestraRegisterSystemEvents();
 	}
-
 }
