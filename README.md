@@ -42,8 +42,8 @@ microcontainer para distribuição de execuções, eventos e notificaçes em tem
     	@JOrchestra(path = "events", jOrchestraSignal = JOrchestraSignal.EVENT) --B1
     	public class DistributedEvent implements Consumer<EventType>{--B2
 
-  	  @Autowired
-  	  private HazelcastInstance hazelcastInstance; --B3
+	    @Autowired
+	    private HazelcastInstance hazelcastInstance; --B3
 	    
 	    @Override
 	    public void accept(final EventType eventType) { --B4
