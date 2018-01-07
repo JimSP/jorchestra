@@ -29,7 +29,7 @@ microcontainer para distribuição de execuções, eventos e notificaçes em tem
     A1: durante a fase de loader da aplicação o microcontainer irá interceptar a anotação @JOrchestra e publicar os métodos da classe anotada em endpoints websocket.
 
     A2: Os endpoint seguem o nome do path descrito em @JOrchestra como prefixo e o nome do método como sulfixo.
-       Para que o método "Response DistributedMessage.executar(Request)" seja executado, é preciso estabelecer uma conexão websocket com  endpoint http://servername:port/endpoint-executar
+       Para que o método "Response DistributedMessage.executar(Request)" seja executado, é preciso estabelecer uma conexão websocket com  endpoint ws://servername:port/endpoint-executar
        Ao enviar um payload json do Request, o método do bean java anotado será executado.
    
     A3: Após o processamento do Request e o retorno do Response, será enviado para a conexão estabelecida um json de Response.
