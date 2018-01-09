@@ -1,22 +1,40 @@
 package br.com.jorchestra.example.util;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.jorchestra.canonical.JOrchestraCommand;
+import br.com.jorchestra.dto.JOrchestraAdminRequest;
 import br.com.jorchestra.example.canonical.Account;
 import br.com.jorchestra.example.dto.TransferRequest;
 
 public class CreateTransferRequest {
 
 	@Test
-	public void test() throws JsonProcessingException{
+	public void test() throws JsonProcessingException {
 		final TransferRequest transferRequest = CreateTransferRequest.create();
-		System.out.println(transferRequest);
 		System.out.println(new ObjectMapper().writeValueAsString(transferRequest));
+	}
+
+	@Test
+	public void teste1() throws JsonProcessingException {
+		final JOrchestraCommand jOrchestraCommand = JOrchestraCommand.SHEL;
+		final String jorchestaPath = null;
+		final String sessionId = null;
+		final String requestId = null;
+		final String username = "JOrchestra";
+		final String password = "JOrchestra";
+		final Map<String, String> extraData = new HashMap<>();
+		extraData.put("shelCommand", "ls -l");
+		
+		final JOrchestraAdminRequest jOrchestraAdminRequest = new JOrchestraAdminRequest(jOrchestraCommand, jorchestaPath, sessionId, requestId, username, password, extraData);
+		System.out.println(new ObjectMapper().writeValueAsString(jOrchestraAdminRequest));
 	}
 
 	public static TransferRequest create() {

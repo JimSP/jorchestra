@@ -1,6 +1,7 @@
 package br.com.jorchestra.dto;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,31 +21,34 @@ public class JOrchestraAdminRequest implements Serializable {
 	}
 
 	private final JOrchestraCommand jOrchestraCommand;
-	private final String jorchestaPath;
+	private final String jOrchestaPath;
 	private final String sessionId;
 	private final String requestId;
 	private final String username;
 	private final String password;
+	private final Map<String, String> extraData;
 
 	@JsonCreator
 	public JOrchestraAdminRequest(@JsonProperty("jOrchestraCommand") final JOrchestraCommand jOrchestraCommand,
-			@JsonProperty("jorchestaPath") final String jorchestaPath,
+			@JsonProperty("jOrchestaPath") final String jOrchestaPath,
 			@JsonProperty("sessionId") final String sessionId, @JsonProperty("requestId") final String requestId,
-			@JsonProperty("username") final String username, @JsonProperty("password") final String password) {
+			@JsonProperty("username") final String username, @JsonProperty("password") final String password,
+			@JsonProperty("extraData") final Map<String, String> extraData) {
 		this.jOrchestraCommand = jOrchestraCommand;
-		this.jorchestaPath = jorchestaPath;
+		this.jOrchestaPath = jOrchestaPath;
 		this.sessionId = sessionId;
 		this.requestId = requestId;
 		this.username = username;
 		this.password = password;
+		this.extraData = extraData;
 	}
 
 	public JOrchestraCommand getJOrchestraCommand() {
 		return jOrchestraCommand;
 	}
 
-	public String getJorchestaPath() {
-		return jorchestaPath;
+	public String getJOrchestaPath() {
+		return jOrchestaPath;
 	}
 
 	public String getSessionId() {
@@ -62,13 +66,17 @@ public class JOrchestraAdminRequest implements Serializable {
 	public String getPassword() {
 		return password;
 	}
+	
+	public Map<String, String> getExtraData() {
+		return extraData;
+	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((jOrchestraCommand == null) ? 0 : jOrchestraCommand.hashCode());
-		result = prime * result + ((jorchestaPath == null) ? 0 : jorchestaPath.hashCode());
+		result = prime * result + ((jOrchestaPath == null) ? 0 : jOrchestaPath.hashCode());
 		result = prime * result + ((requestId == null) ? 0 : requestId.hashCode());
 		result = prime * result + ((sessionId == null) ? 0 : sessionId.hashCode());
 		return result;
@@ -85,10 +93,10 @@ public class JOrchestraAdminRequest implements Serializable {
 		JOrchestraAdminRequest other = (JOrchestraAdminRequest) obj;
 		if (jOrchestraCommand != other.jOrchestraCommand)
 			return false;
-		if (jorchestaPath == null) {
-			if (other.jorchestaPath != null)
+		if (jOrchestaPath == null) {
+			if (other.jOrchestaPath != null)
 				return false;
-		} else if (!jorchestaPath.equals(other.jorchestaPath))
+		} else if (!jOrchestaPath.equals(other.jOrchestaPath))
 			return false;
 		if (requestId == null) {
 			if (other.requestId != null)
@@ -105,7 +113,7 @@ public class JOrchestraAdminRequest implements Serializable {
 
 	@Override
 	public String toString() {
-		return "JOrchestraAdminRequest [jOrchestraCommand=" + jOrchestraCommand + ", jorchestaPath=" + jorchestaPath
+		return "JOrchestraAdminRequest [jOrchestraCommand=" + jOrchestraCommand + ", jOrchestaPath=" + jOrchestaPath
 				+ ", sessionId=" + sessionId + ", requestId=" + requestId + "]";
 	}
 }

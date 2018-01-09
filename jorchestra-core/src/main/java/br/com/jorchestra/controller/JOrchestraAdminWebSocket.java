@@ -16,8 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.jorchestra.canonical.JOrchestraStateCall;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 import br.com.jorchestra.dto.JOrchestraAdminRequest;
+import br.com.jorchestra.runtime.JOrchestraRuntime;
+import br.com.jorchestra.runtime.RuntimeCallback;
 
-public final class JOrchestraAdminWebSocket extends TextWebSocketHandler {
+public final class JOrchestraAdminWebSocket extends TextWebSocketHandler implements RuntimeCallback {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraAdminWebSocket.class);
 
 	private final JOrchestraConfigurationProperties jOrchestraConfigurationProperties;
@@ -51,24 +53,15 @@ public final class JOrchestraAdminWebSocket extends TextWebSocketHandler {
 
 		if (JOrchestraAdminRequest.isValidUserNameAndPassword(jOrchestraAdminRequest,
 				jOrchestraConfigurationProperties)) {
-			final JOrchestraStateCall jOrchestraStateCallSearchTemplate = JOrchestraStateCall
-					.createSearchTemplate(jOrchestraConfigurationProperties, jOrchestraAdminRequest);
-
-			final Map<JOrchestraStateCall, Future<Object>> map = executorServiceMap
-					.get(jOrchestraAdminRequest.getSessionId());
-
-			map.entrySet().parallelStream().filter(predicate -> {
-				return predicate.getKey().equals(jOrchestraStateCallSearchTemplate);
-			}).forEach(action -> {
-				final Boolean result = jOrchestraAdminRequest.getJOrchestraCommand().execute(action);
-				sendMessage(webSocketSession, "command executed successfully.", result);
-			});
+			jOrchestraAdminRequest.getJOrchestraCommand().execute(this, executorServiceMap,
+					jOrchestraConfigurationProperties, jOrchestraAdminRequest, webSocketSession,
+					new JOrchestraRuntime());
 		} else {
 			sendMessage(webSocketSession, "authentication fail.", false);
 		}
 	}
 
-	private void sendMessage(final WebSocketSession webSocketSession, final Object... result) {
+	public void sendMessage(final WebSocketSession webSocketSession, final String tag, final Object... result) {
 		try {
 			final ObjectMapper objectMapper = new ObjectMapper();
 			final String payload = objectMapper.writeValueAsString(result);
