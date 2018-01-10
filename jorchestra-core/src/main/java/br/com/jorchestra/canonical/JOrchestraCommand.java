@@ -48,7 +48,7 @@ public enum JOrchestraCommand {
 					webSocketSession, jOrchestraStateCallSearchTemplate, Boolean.FALSE);
 		}
 	},
-	SHEL {
+	SHELL {
 		@Override
 		public void execute(final JOrchestraAdminWebSocket jOrchestraAdminWebSocket,
 				final Map<String, Map<JOrchestraStateCall, Future<Object>>> executorServiceMap,

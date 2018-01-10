@@ -1,16 +1,15 @@
 package br.com.jorchestra.dto;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 public class JOrchestraNotification implements Serializable {
 
 	private static final long serialVersionUID = -8799557113566292444L;
 
 	private final String type;
-	private final byte[] payload;
+	private final String payload;
 
-	public JOrchestraNotification(final String type, final byte[] payload) {
+	public JOrchestraNotification(final String type, final String payload) {
 		this.type = type;
 		this.payload = payload;
 	}
@@ -19,7 +18,7 @@ public class JOrchestraNotification implements Serializable {
 		return type;
 	}
 
-	public byte[] getPayload() {
+	public String getPayload() {
 		return payload;
 	}
 
@@ -27,7 +26,7 @@ public class JOrchestraNotification implements Serializable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(payload);
+		result = prime * result + ((payload == null) ? 0 : payload.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
@@ -41,7 +40,10 @@ public class JOrchestraNotification implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		JOrchestraNotification other = (JOrchestraNotification) obj;
-		if (!Arrays.equals(payload, other.payload))
+		if (payload == null) {
+			if (other.payload != null)
+				return false;
+		} else if (!payload.equals(other.payload))
 			return false;
 		if (type == null) {
 			if (other.type != null)
@@ -53,6 +55,6 @@ public class JOrchestraNotification implements Serializable {
 
 	@Override
 	public String toString() {
-		return "JOrchestraNotification [type=" + type + ", payload=" + Arrays.toString(payload) + "]";
+		return "JOrchestraNotification [type=" + type + ", payload=" + payload + "]";
 	}
 }

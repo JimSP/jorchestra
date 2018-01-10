@@ -20,11 +20,12 @@ public class CreateTransferRequest {
 	public void test() throws JsonProcessingException {
 		final TransferRequest transferRequest = CreateTransferRequest.create();
 		System.out.println(new ObjectMapper().writeValueAsString(transferRequest));
+		System.out.println(new ObjectMapper().writeValueAsString("oi"));
 	}
 
 	@Test
 	public void teste1() throws JsonProcessingException {
-		final JOrchestraCommand jOrchestraCommand = JOrchestraCommand.SHEL;
+		final JOrchestraCommand jOrchestraCommand = JOrchestraCommand.SHELL;
 		final String jorchestaPath = null;
 		final String sessionId = null;
 		final String requestId = null;

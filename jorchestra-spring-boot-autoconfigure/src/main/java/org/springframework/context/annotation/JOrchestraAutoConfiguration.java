@@ -25,6 +25,7 @@ import br.com.jorchestra.canonical.JOrchestraSignal;
 import br.com.jorchestra.canonical.JOrchestraStateCall;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 import br.com.jorchestra.controller.JOrchestraAdminWebSocket;
+import br.com.jorchestra.controller.JOrchestraConversationWebSocketController;
 import br.com.jorchestra.controller.JOrchestraMonitorWebSocket;
 import br.com.jorchestra.service.JOrchestraBeans;
 import br.com.jorchestra.util.JOrchestraContextUtils;
@@ -56,8 +57,9 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 		JOrchestraContextUtils.setApplicationContext(applicationContext);
 
 		final JOrchestraMonitorWebSocket jOrchestraMonitorWebSocket = new JOrchestraMonitorWebSocket();
-		final JOrchestraAdminWebSocket jOrchestraAdminWebSocket = new JOrchestraAdminWebSocket(jOrchestraConfigurationProperties, JOrchestraContextUtils.getExecutorServiceMap());
-		
+		final JOrchestraAdminWebSocket jOrchestraAdminWebSocket = new JOrchestraAdminWebSocket(
+				jOrchestraConfigurationProperties, JOrchestraContextUtils.getExecutorServiceMap());
+
 		final Config config = hazelCastConfig(jOrchestraConfigurationProperties.getClusterName());
 
 		final List<JOrchestraHandle> list = JOrchestraContextUtils.jorchestraHandleConsumer( //
@@ -65,11 +67,19 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 					final JOrchestraSignal jOrchestraSignal = jOrchestraHandle.getjOrchestraSignal();
 					registerJOrchestraPath(jOrchestraHandle, config, jOrchestraSignal);
 				});
-		
+
 		final HazelcastInstance hazelcastInstance = hazelcastInstance(config);
 		final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic = hazelcastInstance
 				.getReliableTopic("jOrchestraStateCallTopic");
 		jOrchestraStateCallTopic.addMessageListener(jOrchestraMonitorWebSocket);
+
+		config.addTopicConfig(createConversationTopic());
+
+		final ITopic<String[]> conversationTopic = hazelcastInstance.getTopic("jOrchestra-conversation");
+		final JOrchestraConversationWebSocketController joOrchestraConversationWebSocketController = new JOrchestraConversationWebSocketController(
+				null, jOrchestraStateCallTopic, jOrchestraConfigurationProperties, conversationTopic);
+
+		conversationTopic.addMessageListener(joOrchestraConversationWebSocketController);
 
 		list.forEach(jOrchestraHandle -> {
 			final String jorchestraPath = jOrchestraHandle.getJOrchestraPath();
@@ -88,10 +98,20 @@ public class JOrchestraAutoConfiguration extends WebMvcConfigurerAdapter impleme
 		webSocketHandlerRegistry //
 				.addHandler(jOrchestraMonitorWebSocket, "jOrchestra-monitor") //
 				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
-		
+
 		webSocketHandlerRegistry //
 				.addHandler(jOrchestraAdminWebSocket, "jOrchestra-admin")
 				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
+
+		webSocketHandlerRegistry //
+				.addHandler(joOrchestraConversationWebSocketController, "jOrchestra-conversation") //
+				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
+	}
+
+	private TopicConfig createConversationTopic() {
+		final TopicConfig topicConfig = new TopicConfig("jOrchestra-conversation");
+		topicConfig.setGlobalOrderingEnabled(true);
+		return topicConfig;
 	}
 
 	@Override

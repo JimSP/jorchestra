@@ -21,7 +21,7 @@ import br.com.jorchestra.dto.JOrchestraNotification;
 public class JOrchestraNotificationWebSocketController extends JOrchestraWebSocketTemplate
 		implements MessageListener<JOrchestraNotification> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraEventWebSocketController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraNotificationWebSocketController.class);
 
 	private final ITopic<JOrchestraNotification> JOrchestraTopicNotification;
 

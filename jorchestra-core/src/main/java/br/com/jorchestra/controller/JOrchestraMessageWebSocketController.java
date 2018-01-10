@@ -58,9 +58,9 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 			super.handleTextMessage(webSocketSession, textMessage);
 			invokeJOrchestraBean(webSocketSession, textMessage.getPayload());
 		} catch (Throwable t) {
-			LOGGER.debug("handleTextMessage, " + webSocketSession.getId() + ", payload=" + textMessage.getPayload(), t);
+			LOGGER.debug("m=handleTextMessage, sessionId=, " + webSocketSession.getId() + ", payload=" + textMessage.getPayload(), t);
 			throw new Exception(
-					"handleTextMessage, " + webSocketSession.getId() + ", payload=" + textMessage.getPayload(), t);
+					"m=handleTextMessage, sessionId=, " + webSocketSession.getId() + ", payload=" + textMessage.getPayload(), t);
 		}
 	}
 
