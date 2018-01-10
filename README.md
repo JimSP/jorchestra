@@ -114,13 +114,47 @@ microcontainer para distribuição de execuções, eventos e notificaçes em tem
   
   Abaixo o payload recebido pela conexão estabelecida no endpoint "/jOrchestra-monitor".
   Esse payload foi enviado quando uma conexão foi estabelecida no path "jorchestra-beans", enviado um payload e encerrada a conexão.
+
+      {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#4a4d39e6-4342-489e-8d21-e04d461ff815","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"4a4d39e6-4342-489e-8d21-e04d461ff815","beginTimestamp":1515344992534,"endTimestamp":null,"jOrchestraState":"SESSION_OPEN","payload":null}
+    	
+      {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#b78d1c6a-a080-4ffc-8fa8-8b872272897a","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"b78d1c6a-a080-4ffc-8fa8-8b872272897a","beginTimestamp":null,"endTimestamp":null,"jOrchestraState":"DATA_WAITING","payload":""}
+    	
+      {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#a230de4a-8aac-4953-8059-82783d26e672","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"a230de4a-8aac-4953-8059-82783d26e672","beginTimestamp":1515344997551,"endTimestamp":null,"jOrchestraState":"DATA_PROCESSING","payload":""}
+  	
+      {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#5bffcc48-d95b-470f-b4dd-6c4cfe34f605","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"5bffcc48-d95b-470f-b4dd-6c4cfe34f605","beginTimestamp":null,"endTimestamp":1515344997691,"jOrchestraState":"DATA_SUCCESS","payload":""}
+  	
+      {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#979f3728-1684-444e-9d05-880011ac889a","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"979f3728-1684-444e-9d05-880011ac889a","beginTimestamp":null,"endTimestamp":1515345000688,"jOrchestraState":"SESSION_CLOSE","payload":null}
+
+  - Gerenciamento do microcontainer.
+  Para gerenciamento do JOrchestra basta estabelecer uma conexão com o endpoint websocket "/jOrchestra-admin".
   
-	  {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#4a4d39e6-4342-489e-8d21-e04d461ff815","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"4a4d39e6-4342-489e-8d21-e04d461ff815","beginTimestamp":1515344992534,"endTimestamp":null,"jOrchestraState":"SESSION_OPEN","payload":null}
-    	
-  	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#b78d1c6a-a080-4ffc-8fa8-8b872272897a","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"b78d1c6a-a080-4ffc-8fa8-8b872272897a","beginTimestamp":null,"endTimestamp":null,"jOrchestraState":"DATA_WAITING","payload":""}
-    	
-  	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#a230de4a-8aac-4953-8059-82783d26e672","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"a230de4a-8aac-4953-8059-82783d26e672","beginTimestamp":1515344997551,"endTimestamp":null,"jOrchestraState":"DATA_PROCESSING","payload":""}
-  	
-  	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#5bffcc48-d95b-470f-b4dd-6c4cfe34f605","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"5bffcc48-d95b-470f-b4dd-6c4cfe34f605","beginTimestamp":null,"endTimestamp":1515344997691,"jOrchestraState":"DATA_SUCCESS","payload":""}
-  	
-  	{"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#979f3728-1684-444e-9d05-880011ac889a","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"979f3728-1684-444e-9d05-880011ac889a","beginTimestamp":null,"endTimestamp":1515345000688,"jOrchestraState":"SESSION_CLOSE","payload":null}
+  Após estabelecida a conexão, é possível enviar comandos ao JOrchestra.
+  Os comandos disponíveis são:
+  
+    CANCEL_TASK_RUNNING - cancela uma execução de uma mensagem em execução.
+    CANCEL_TASK_NOT_RUNNING - cancela a execuão de uma mensagem que não esteja sendo executada.
+    SHELL - executa um comando no Shell da máquina da instância do JORchestra.
+    
+    exemplos para cancelamento de uma mensagem:
+    
+      {"jOrchestaPath":"${CAMINHO_JORCHESTRA}","sessionId":"${SESSION_ID}","requestId":"${REQUEST_ID}","username":"${USERNAME}","password":"${PASSWORD}","extraData":null,"jOrchestraCommand":"CANCEL_TASK_RUNNING"}
+	  
+	onde:
+		CAMINHO_JORCHESTRA - caminho utilizado para anotar o java bean @JOrchestra(path="/CAMINHO_JORCHESTRA").
+		SESSION_ID - Id da sessão estabelecida na conexão com o endpoint websocket.
+		USERNAME - nome do usuário configurado no arquivo application.properties do microcontainer JOrchestra.
+		PASSWORD - senha do usuário configurado no arquivo application.properties do microcontainer JOrchestra.
+		CANCEL_TASK_RUNNING - comando para cancelar a mensagem que está sendo executada no dado caminho, de requisição e sessão descritos acima.
+		ou
+		CANCEL_TASK_NOT_RUNNING - omando para cancelar a mensagem que não está em execução no dado caminho, de requisição e sessão descritos acima.
+
+
+    exemplos para execução de um comando em Shell:
+    
+    	  {"jOrchestaPath":null,"sessionId":null,"requestId":null,"username":"JOrchestra","password":"JOrchestra","extraData":{"shelCommand":"${COMMAND}"},"jOrchestraCommand":"SHEL"}
+
+	onde:
+		USERNAME - nome do usuário configurado no arquivo application.properties do microcontainer JOrchestra.
+		PASSWORD - senha do usuário configurado no arquivo application.properties do microcontainer JOrchestra.
+		COMMAND - comando que será executado na máquina onde da instância do JOrchestra.
+		
