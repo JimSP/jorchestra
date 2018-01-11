@@ -56,25 +56,56 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 			throws Exception {
 		try {
 			super.handleTextMessage(webSocketSession, textMessage);
-			invokeJOrchestraBean(webSocketSession, textMessage.getPayload());
 		} catch (Throwable t) {
-			LOGGER.debug("m=handleTextMessage, sessionId=, " + webSocketSession.getId() + ", payload=" + textMessage.getPayload(), t);
-			throw new Exception(
-					"m=handleTextMessage, sessionId=, " + webSocketSession.getId() + ", payload=" + textMessage.getPayload(), t);
+			LOGGER.debug("m=handleTextMessage, sessionId=, " + webSocketSession.getId() + ", payload="
+					+ textMessage.getPayload(), t);
+
+			final JOrchestraStateCall jOrchestraStateCall_Error = JOrchestraStateCall.createJOrchestraStateCall_ERROR(
+					jOrchestraConfigurationProperties.getClusterName(),
+					jOrchestraConfigurationProperties.getName(),
+					webSocketSession.getUri().getPath(),
+					webSocketSession.getId(),
+					System.currentTimeMillis(),
+					System.currentTimeMillis(),
+					textMessage.getPayload());
+
+			super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Error);
+
+			throw new Exception("m=handleTextMessage, sessionId=, " + webSocketSession.getId() + ", payload="
+					+ textMessage.getPayload(), t);
 		}
 	}
 
 	@Override
 	public void handleTransportError(final WebSocketSession webSocketSession, final Throwable e) throws Exception {
-		final String sessionId = webSocketSession.getId();
-		executorServiceMap.get(sessionId).clear();
+		final JOrchestraStateCall jOrchestraStateCall_Error = JOrchestraStateCall.createJOrchestraStateCall_ERROR(
+				jOrchestraConfigurationProperties.getClusterName(),
+				jOrchestraConfigurationProperties.getName(),
+				webSocketSession.getUri().getPath(),
+				webSocketSession.getId(),
+				System.currentTimeMillis(),
+				System.currentTimeMillis(),
+				null);
+
+		super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Error);
+
 		super.handleTransportError(webSocketSession, e);
 	}
 
-	private void invokeJOrchestraBean(final WebSocketSession webSocketSession, final String payload)
+	@Override
+	protected void onMessage(final WebSocketSession webSocketSession, final TextMessage textMessage,
+			final JOrchestraStateCall jOrchestraStateCallWaiting)
+			throws JsonParseException, JsonMappingException, IllegalAccessException, InvocationTargetException,
+			JsonProcessingException, IOException, InterruptedException, ExecutionException {
+		invokeJOrchestraBean(webSocketSession, textMessage, jOrchestraStateCallWaiting);
+	}
+
+	private void invokeJOrchestraBean(final WebSocketSession webSocketSession, final TextMessage textMessage,
+			final JOrchestraStateCall jOrchestraStateCallWaiting)
 			throws IllegalAccessException, InvocationTargetException, IOException, JsonParseException,
 			JsonMappingException, JsonProcessingException, InterruptedException, ExecutionException {
 
+		final String payload = textMessage.getPayload();
 		final ObjectMapper objectMapper = new ObjectMapper();
 		final Class<?>[] parameterTypes = jOrchestraHandle.getJorchestraParametersType();
 
@@ -84,15 +115,19 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 			list.add(parameter);
 		}
 
-		final JOrchestraCallable JOrchestraCallable = new JOrchestraCallable(jOrchestraHandle, parameterTypes,
+		final JOrchestraCallable jOrchestraCallable = new JOrchestraCallable(jOrchestraHandle, parameterTypes,
 				list.toArray());
 
-		final Future<Object> future = executorService.submit(JOrchestraCallable);
+		/// TODO: criar um map de cancelamento no endpoint admin, verificar no admin
+		/// se a task Future já existe para esse requestId, caso não, registrar o
+		/// cancelamento.
+		/// Nesse controller, caso um requestId tenha sido cancelado antes de ter sido
+		/// submetido,
+		/// nao submeter JOrchestraCallable
+		final Future<Object> future = executorService.submit(jOrchestraCallable);
 
 		final JOrchestraStateCall jOrchestraStateCall_Processing = JOrchestraStateCall
-				.createJOrchestraStateCall_PROCESSING(webSocketSession.getId(),
-						jOrchestraConfigurationProperties.getClusterName(), jOrchestraConfigurationProperties.getName(),
-						payload);
+				.createJOrchestraStateCall_PROCESSING(jOrchestraStateCallWaiting, payload);
 
 		final Map<JOrchestraStateCall, Future<Object>> joOrchestraStateCalls = executorServiceMap
 				.get(webSocketSession.getId());
@@ -106,17 +141,16 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 
 			if (future.isCancelled()) {
 				final JOrchestraStateCall jOrchestraStateCall_Success = JOrchestraStateCall
-						.createJOrchestraStateCall_SUCCESS(jOrchestraStateCall_Processing, payload);
+						.createJOrchestraStateCall_CANCELED(jOrchestraStateCall_Processing, payload);
 				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Success);
 				joOrchestraStateCalls.remove(jOrchestraStateCall_Success);
 			} else {
 				final JOrchestraStateCall jOrchestraStateCall_Canceled = JOrchestraStateCall
-						.createJOrchestraStateCall_CANCELED(jOrchestraStateCall_Processing, payload);
+						.createJOrchestraStateCall_SUCCESS(jOrchestraStateCall_Processing, payload);
 				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Canceled);
 				joOrchestraStateCalls.remove(jOrchestraStateCall_Canceled);
 			}
 		} catch (InterruptedException | ExecutionException e) {
-
 			LOGGER.error(
 					"handleTextMessage, jOrchestraStateCall=" + jOrchestraStateCall_Processing + ", payload=" + payload,
 					e);

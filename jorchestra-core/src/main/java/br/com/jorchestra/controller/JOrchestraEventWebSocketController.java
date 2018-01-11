@@ -39,6 +39,12 @@ public class JOrchestraEventWebSocketController extends JOrchestraWebSocketTempl
 			}
 		});
 	}
+	
+	@Override
+	protected void onMessage(final WebSocketSession webSocketSession, final TextMessage textMessage,
+			JOrchestraStateCall jOrchestraStateCallWaiting) throws Exception {
+		
+	}
 
 	private void sendEnvent(final WebSocketSession webSocketSession, final Object object)
 			throws IOException, JsonProcessingException {

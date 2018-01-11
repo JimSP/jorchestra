@@ -26,8 +26,8 @@ public enum JOrchestraCommand {
 				final JOrchestraAdminRequest jOrchestraAdminRequest, final WebSocketSession webSocketSession,
 				final JOrchestraRuntime jOrchestraRuntime) {
 
-			final JOrchestraStateCall jOrchestraStateCallSearchTemplate = JOrchestraStateCall
-					.createSearchTemplate(jOrchestraConfigurationProperties, jOrchestraAdminRequest);
+			final JOrchestraStateCall jOrchestraStateCallSearchTemplate = JOrchestraStateCall.createSearchTemplate(
+					jOrchestraConfigurationProperties, jOrchestraAdminRequest, webSocketSession.getUri().getPath());
 
 			JOrchestraCommand.execute(jOrchestraAdminWebSocket, executorServiceMap, jOrchestraAdminRequest,
 					webSocketSession, jOrchestraStateCallSearchTemplate, Boolean.TRUE);
@@ -41,8 +41,8 @@ public enum JOrchestraCommand {
 				final JOrchestraAdminRequest jOrchestraAdminRequest, final WebSocketSession webSocketSession,
 				final JOrchestraRuntime jOrchestraRuntime) {
 
-			final JOrchestraStateCall jOrchestraStateCallSearchTemplate = JOrchestraStateCall
-					.createSearchTemplate(jOrchestraConfigurationProperties, jOrchestraAdminRequest);
+			final JOrchestraStateCall jOrchestraStateCallSearchTemplate = JOrchestraStateCall.createSearchTemplate(
+					jOrchestraConfigurationProperties, jOrchestraAdminRequest, webSocketSession.getUri().getPath());
 
 			JOrchestraCommand.execute(jOrchestraAdminWebSocket, executorServiceMap, jOrchestraAdminRequest,
 					webSocketSession, jOrchestraStateCallSearchTemplate, Boolean.FALSE);
@@ -98,7 +98,7 @@ public enum JOrchestraCommand {
 	};
 
 	private static final String EXECUTION_ERROR = "execution error.";
-	private static final String SHEL_COMMAND = "shelCommand";
+	public static final String SHEL_COMMAND = "shellCommand";
 	private static final String COMMAND_EXECUTED_SUCCESSFULLY = "command executed successfully.";
 
 	public abstract void execute(final JOrchestraAdminWebSocket jOrchestraAdminWebSocket,

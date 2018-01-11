@@ -10,95 +10,181 @@ public class JOrchestraStateCall implements Serializable {
 
 	private static final long serialVersionUID = -1154684408146759207L;
 
-	public static JOrchestraStateCall createJOrchestraStateCall_WAITING(final String sessionId,
-			final String clusterName, final String jOcrhestrName, final String payload) {
+	public static JOrchestraStateCall createJOrchestraStateCall_WAITING(final String clusterName,
+			final String jOcrhestrName, final String jOrchestraPah, final String sessionId, final String payload) {
+
 		final UUID requestId = UUID.randomUUID();
 		final Long beginTimestamp = null;
 		final JOrchestraState jOrchestraState = JOrchestraState.DATA_WAITING;
 		final Long endTimestamp = null;
-		return new JOrchestraStateCall(clusterName, jOcrhestrName, sessionId, requestId, beginTimestamp, endTimestamp,
-				jOrchestraState, payload);
+
+		return new JOrchestraStateCall( //
+				clusterName, //
+				jOcrhestrName, //
+				jOrchestraPah, //
+				sessionId, //
+				requestId, //
+				beginTimestamp, //
+				endTimestamp, //
+				jOrchestraState, //
+				payload);
 	}
 
-	public static JOrchestraStateCall createJOrchestraStateCall_PROCESSING(final String sessionId,
-			final String clusterName, final String jOcrhestrName, final String payload) {
-		final UUID requestId = UUID.randomUUID();
+	public static JOrchestraStateCall createJOrchestraStateCall_PROCESSING(
+			final JOrchestraStateCall jOrchestraStateCall_Waiting, final String payload) {
 		final Long beginTimestamp = System.currentTimeMillis();
-		final JOrchestraState jOrchestraState = JOrchestraState.DATA_PROCESSING;
-		final Long endTimestamp = null;
-		return new JOrchestraStateCall(clusterName, jOcrhestrName, sessionId, requestId, beginTimestamp, endTimestamp,
-				jOrchestraState, payload);
+
+		return new JOrchestraStateCall( //
+				jOrchestraStateCall_Waiting.getClusterName(), //
+				jOrchestraStateCall_Waiting.getjOcrhestrName(), //
+				jOrchestraStateCall_Waiting.getjOrchestraPath(), //
+				jOrchestraStateCall_Waiting.getSessionId(), //
+				jOrchestraStateCall_Waiting.getRequestId(), //
+				beginTimestamp, //
+				null, //
+				JOrchestraState.DATA_PROCESSING, //
+				payload);
 	}
 
 	public static JOrchestraStateCall createJOrchestraStateCall_CANCELED(
-			final JOrchestraStateCall jOrchestraStateCall_Canceled, final String payload) {
-		return new JOrchestraStateCall(jOrchestraStateCall_Canceled.getClusterName(),
-				jOrchestraStateCall_Canceled.getjOcrhestrName(), jOrchestraStateCall_Canceled.getSessionId(),
-				jOrchestraStateCall_Canceled.getRequestId(), jOrchestraStateCall_Canceled.getBeginTimestamp(),
-				System.currentTimeMillis(), JOrchestraState.DATA_CANCELED, payload);
+			final JOrchestraStateCall jOrchestraStateCall_Processing, final String payload) {
+
+		return new JOrchestraStateCall( //
+				jOrchestraStateCall_Processing.getClusterName(), //
+				jOrchestraStateCall_Processing.getjOcrhestrName(), //
+				jOrchestraStateCall_Processing.getjOrchestraPath(), //
+				jOrchestraStateCall_Processing.getSessionId(), //
+				jOrchestraStateCall_Processing.getRequestId(), //
+				jOrchestraStateCall_Processing.getBeginTimestamp(), System.currentTimeMillis(), //
+				JOrchestraState.DATA_CANCELED, //
+				payload);
 	}
 
 	public static JOrchestraStateCall createJOrchestraStateCall_SUCCESS(
 			final JOrchestraStateCall jOrchestraStateCall_Processing, final String payload) {
-		return new JOrchestraStateCall(jOrchestraStateCall_Processing.getClusterName(),
-				jOrchestraStateCall_Processing.getjOcrhestrName(), jOrchestraStateCall_Processing.getSessionId(),
-				jOrchestraStateCall_Processing.getRequestId(), jOrchestraStateCall_Processing.getBeginTimestamp(),
-				System.currentTimeMillis(), JOrchestraState.DATA_SUCCESS, payload);
+
+		return new JOrchestraStateCall( //
+				jOrchestraStateCall_Processing.getClusterName(), //
+				jOrchestraStateCall_Processing.getjOcrhestrName(), //
+				jOrchestraStateCall_Processing.getjOrchestraPath(), //
+				jOrchestraStateCall_Processing.getSessionId(), //
+				jOrchestraStateCall_Processing.getRequestId(), //
+				jOrchestraStateCall_Processing.getBeginTimestamp(), //
+				System.currentTimeMillis(), //
+				JOrchestraState.DATA_SUCCESS, //
+				payload);
 	}
 
-	public static JOrchestraStateCall createJOrchestraStateCall_ERROR(final String sessionId, final String clusterName,
-			final String jOcrhestrName) {
+	public static JOrchestraStateCall createJOrchestraStateCall_ERROR(final String clusterName,
+			final String jOcrhestrName, final String jOrchestraPath, final String sessionId) {
 		final UUID requestId = UUID.randomUUID();
 		final Long beginTimestamp = null;
 		final JOrchestraState jOrchestraState = JOrchestraState.DATA_ERROR;
 		final Long endTimestamp = System.currentTimeMillis();
 		final String payload = null;
 
-		return new JOrchestraStateCall(clusterName, jOcrhestrName, sessionId, requestId, beginTimestamp, endTimestamp,
-				jOrchestraState, payload);
+		return new JOrchestraStateCall( //
+				clusterName, //
+				jOcrhestrName, //
+				jOrchestraPath, //
+				sessionId, //
+				requestId, //
+				beginTimestamp, //
+				endTimestamp, //
+				jOrchestraState, //
+				payload);
+	}
+
+	public static JOrchestraStateCall createJOrchestraStateCall_ERROR(final String clusterName,
+			final String jOcrhestrName, final String jOrchestraPath, final String sessionId, final Long beginTimestamp,
+			final Long endTimestamp, final String payload) {
+
+		return new JOrchestraStateCall( //
+				clusterName, //
+				jOcrhestrName, //
+				jOrchestraPath, //
+				sessionId, //
+				UUID.randomUUID(), //
+				beginTimestamp, //
+				endTimestamp, //
+				JOrchestraState.DATA_ERROR, //
+				payload);
 	}
 
 	public static JOrchestraStateCall createJOrchestraStateCall_ERROR(
 			final JOrchestraStateCall jOrchestraStateCall_Processing, final String payload) {
-		return new JOrchestraStateCall(jOrchestraStateCall_Processing.getClusterName(),
-				jOrchestraStateCall_Processing.getjOcrhestrName(), jOrchestraStateCall_Processing.getSessionId(),
-				jOrchestraStateCall_Processing.getRequestId(), jOrchestraStateCall_Processing.getBeginTimestamp(),
-				System.currentTimeMillis(), JOrchestraState.DATA_ERROR, payload);
+
+		return new JOrchestraStateCall( //
+				jOrchestraStateCall_Processing.getClusterName(), //
+				jOrchestraStateCall_Processing.getjOcrhestrName(), //
+				jOrchestraStateCall_Processing.getjOrchestraPath(), //
+				jOrchestraStateCall_Processing.getSessionId(), //
+				jOrchestraStateCall_Processing.getRequestId(), //
+				jOrchestraStateCall_Processing.getBeginTimestamp(), //
+				System.currentTimeMillis(), //
+				JOrchestraState.DATA_ERROR, //
+				payload);
 	}
 
-	public static JOrchestraStateCall createJOrchestraStateCall_OPEN(final String sessionId, final String clusterName,
-			final String jOcrhestrName) {
+	public static JOrchestraStateCall createJOrchestraStateCall_OPEN(final String clusterName,
+			final String jOcrhestrName, final String jOrchestraPath, final String sessionId) {
 		final UUID requestId = UUID.randomUUID();
 		final Long beginTimestamp = System.currentTimeMillis();
 		final JOrchestraState jOrchestraState = JOrchestraState.SESSION_OPEN;
 		final Long endTimestamp = null;
 		final String payload = null;
-		return new JOrchestraStateCall(clusterName, jOcrhestrName, sessionId, requestId, beginTimestamp, endTimestamp,
-				jOrchestraState, payload);
+		return new JOrchestraStateCall( //
+				clusterName, //
+				jOcrhestrName, //
+				jOrchestraPath, //
+				sessionId, //
+				requestId, //
+				beginTimestamp, //
+				endTimestamp, //
+				jOrchestraState, //
+				payload);
 	}
 
-	public static JOrchestraStateCall createJOrchestraStateCall_CLOSE(final String sessionId, final String clusterName,
-			final String jOcrhestrName) {
+	public static JOrchestraStateCall createJOrchestraStateCall_CLOSE(final String clusterName,
+			final String jOcrhestrName, final String jOrchestraPath, final String sessionId) {
 		final UUID requestId = UUID.randomUUID();
 		final Long beginTimestamp = null;
 		final JOrchestraState jOrchestraState = JOrchestraState.SESSION_CLOSE;
 		final Long endTimestamp = System.currentTimeMillis();
 		final String payload = null;
-		return new JOrchestraStateCall(clusterName, jOcrhestrName, sessionId, requestId, beginTimestamp, endTimestamp,
-				jOrchestraState, payload);
+
+		return new JOrchestraStateCall( //
+				clusterName, //
+				jOcrhestrName, //
+				jOrchestraPath, //
+				sessionId, //
+				requestId, //
+				beginTimestamp, //
+				endTimestamp, //
+				jOrchestraState, //
+				payload);
 	}
 
 	public static JOrchestraStateCall createSearchTemplate(
 			final JOrchestraConfigurationProperties jOrchestraConfigurationProperties,
-			final JOrchestraAdminRequest jOrchestraAdminRequest) {
-		return new JOrchestraStateCall(jOrchestraConfigurationProperties.getClusterName(),
-				jOrchestraConfigurationProperties.getName(), jOrchestraAdminRequest.getSessionId(),
-				UUID.fromString(jOrchestraAdminRequest.getRequestId()), null, null, null, null);
+			final JOrchestraAdminRequest jOrchestraAdminRequest, final String jOrchestraPah) {
+
+		return new JOrchestraStateCall( //
+				jOrchestraConfigurationProperties.getClusterName(), //
+				jOrchestraConfigurationProperties.getName(), //
+				jOrchestraPah, //
+				jOrchestraAdminRequest.getSessionId(), //
+				UUID.fromString(jOrchestraAdminRequest.getRequestId()), //
+				null, //
+				null, //
+				null, //
+				null);
 	}
 
 	private final String id;
 	private final String clusterName;
 	private final String jOcrhestrName;
+	private final String jOrchestraPath;
 	private final String sessionId;
 	private final UUID requestId;
 	private final Long beginTimestamp;
@@ -106,13 +192,14 @@ public class JOrchestraStateCall implements Serializable {
 	private final JOrchestraState jOrchestraState;
 	private final String payload;
 
-	public JOrchestraStateCall(final String clusterName, final String jOcrhestrName, final String sessionId,
-			final UUID requestId, final Long beginTimestamp, final Long endTimestamp,
+	public JOrchestraStateCall(final String clusterName, final String jOcrhestrName, final String jOrchestraPath,
+			final String sessionId, final UUID requestId, final Long beginTimestamp, final Long endTimestamp,
 			final JOrchestraState jOrchestraState, final String payload) {
 		super();
-		this.id = clusterName + "#" + jOcrhestrName + "#" + sessionId + "#" + requestId;
+		this.id = clusterName + "#" + jOcrhestrName + "#" + sessionId + "#" + jOrchestraPath + "#" + requestId;
 		this.clusterName = clusterName;
 		this.jOcrhestrName = jOcrhestrName;
+		this.jOrchestraPath = jOrchestraPath;
 		this.sessionId = sessionId;
 		this.requestId = requestId;
 		this.beginTimestamp = beginTimestamp;
@@ -131,6 +218,10 @@ public class JOrchestraStateCall implements Serializable {
 
 	public String getjOcrhestrName() {
 		return jOcrhestrName;
+	}
+
+	public String getjOrchestraPath() {
+		return jOrchestraPath;
 	}
 
 	public String getSessionId() {

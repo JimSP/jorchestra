@@ -43,30 +43,37 @@ public class JOrchestraAdminRequest implements Serializable {
 		this.extraData = extraData;
 	}
 
+	@JsonProperty("jOrchestraCommand")
 	public JOrchestraCommand getJOrchestraCommand() {
 		return jOrchestraCommand;
 	}
 
+	@JsonProperty("jOrchestaPath")
 	public String getJOrchestaPath() {
 		return jOrchestaPath;
 	}
 
+	@JsonProperty("sessionId")
 	public String getSessionId() {
 		return sessionId;
 	}
 
+	@JsonProperty("requestId")
 	public String getRequestId() {
 		return requestId;
 	}
 
+	@JsonProperty("username")
 	public String getUsername() {
 		return username;
 	}
 
+	@JsonProperty("password")
 	public String getPassword() {
 		return password;
 	}
 	
+	@JsonProperty("extraData")
 	public Map<String, String> getExtraData() {
 		return extraData;
 	}

@@ -13,7 +13,7 @@ import br.com.jorchestra.dto.JOrchestraMonitorResponseBuilder;
 import br.com.jorchestra.util.JOrchestraContextUtils;
 import br.com.jorchestra.util.JOrchestraHandleUtils;
 
-@JOrchestra(path = "jorchestra")
+@JOrchestra(path = "jOrchestra")
 public class JOrchestraBeans {
 
 	@Autowired

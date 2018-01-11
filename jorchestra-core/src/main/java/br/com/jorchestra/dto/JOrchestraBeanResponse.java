@@ -7,15 +7,15 @@ public class JOrchestraBeanResponse {
 	}
 
 	private final String jOrchestraBeanName;
-	private final String jOrchestraPah;
+	private final String jOrchestraPath;
 	private final String requestTemplate;
 	private final String responseTemplate;
 	private final String message;
 
-	public JOrchestraBeanResponse(final String jOrchestraBeanName, final String jOrchestraPah,
+	public JOrchestraBeanResponse(final String jOrchestraBeanName, final String jOrchestraPath,
 			final String requestTemplate, final String responseTemplate, final String message) {
 		this.jOrchestraBeanName = jOrchestraBeanName;
-		this.jOrchestraPah = jOrchestraPah;
+		this.jOrchestraPath = jOrchestraPath;
 		this.requestTemplate = requestTemplate;
 		this.responseTemplate = responseTemplate;
 		this.message = message;
@@ -25,8 +25,8 @@ public class JOrchestraBeanResponse {
 		return jOrchestraBeanName;
 	}
 
-	public String getjOrchestraPah() {
-		return jOrchestraPah;
+	public String getjOrchestraPath() {
+		return jOrchestraPath;
 	}
 
 	public String getRequestTemplate() {
@@ -43,7 +43,7 @@ public class JOrchestraBeanResponse {
 
 	@Override
 	public String toString() {
-		return "JOrchestraBeanResponse [jOrchestraBeanName=" + jOrchestraBeanName + ", jOrchestraPah=" + jOrchestraPah
+		return "JOrchestraBeanResponse [jOrchestraBeanName=" + jOrchestraBeanName + ", jOrchestraPath=" + jOrchestraPath
 				+ ", requestTemplate=" + requestTemplate + ", responseTemplate=" + responseTemplate + ", message="
 				+ message + "]";
 	}

@@ -10,24 +10,30 @@ import java.util.Map;
 
 import org.springframework.web.socket.WebSocketSession;
 
+import br.com.jorchestra.canonical.JOrchestraCommand;
+
 public class JOrchestraRuntime {
+
+	private static final String EXECUTION_ERROR = "execution_error";
+	private static final String ERROR = "error";
+	private static final String SUCCESS = "success";
 
 	public void execute(final Map<String, String> data, final RuntimeCallback runtimeCallback,
 			final WebSocketSession webSocketSession) {
 		final Runtime runtime = Runtime.getRuntime();
 		try {
-			final Process process = runtime.exec(data.get("shelCommand"));
+			final Process process = runtime.exec(data.get(JOrchestraCommand.SHEL_COMMAND));
 			final InputStream inputStream = process.getInputStream();
 			final InputStream errorStream = process.getErrorStream();
 
 			final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 			final BufferedReader bufferedReaderError = new BufferedReader(new InputStreamReader(errorStream));
 
-			collectAndSend(runtimeCallback, bufferedReader, "success", webSocketSession);
-			collectAndSend(runtimeCallback, bufferedReaderError, "error", webSocketSession);
+			collectAndSend(runtimeCallback, bufferedReader, SUCCESS, webSocketSession);
+			collectAndSend(runtimeCallback, bufferedReaderError, ERROR, webSocketSession);
 
 		} catch (IOException e) {
-			runtimeCallback.sendMessage(webSocketSession, "execution error.", e);
+			runtimeCallback.sendMessage(webSocketSession, EXECUTION_ERROR, e);
 		}
 	}
 

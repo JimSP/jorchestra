@@ -6,4 +6,5 @@ gradle.properties
 settings.xml
 .project
 .classpath
-secring.gpg
+.gpg
+.asc

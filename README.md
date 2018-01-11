@@ -113,7 +113,7 @@ microcontainer para distribuição de execuções, eventos e notificaçes em tem
   Ao estabelecer uma conexão com o endpoint websocket "/jOrchestra-monitor" é possivel receber do microcontainer o estado das conexões estabelecidas e payload enviados aos endpoints disponíveis à partir desse momento.
   
   Abaixo o payload recebido pela conexão estabelecida no endpoint "/jOrchestra-monitor".
-  Esse payload foi enviado quando uma conexão foi estabelecida no path "jorchestra-beans", enviado um payload e encerrada a conexão.
+  Esse payload foi enviado quando uma conexão foi estabelecida no path "jOrchestra-beans", enviado um payload e encerrada a conexão.
 
       {"id":"jOcrhestra#JOrchestraExampleApp-Dev#2#4a4d39e6-4342-489e-8d21-e04d461ff815","clusterName":"jOcrhestra","jOcrhestrName":"JOrchestraExampleApp-Dev","sessionId":"2","requestId":"4a4d39e6-4342-489e-8d21-e04d461ff815","beginTimestamp":1515344992534,"endTimestamp":null,"jOrchestraState":"SESSION_OPEN","payload":null}
     	

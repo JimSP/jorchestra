@@ -32,7 +32,7 @@ public class CreateTransferRequest {
 		final String username = "JOrchestra";
 		final String password = "JOrchestra";
 		final Map<String, String> extraData = new HashMap<>();
-		extraData.put("shelCommand", "ls -l");
+		extraData.put(JOrchestraCommand.SHEL_COMMAND, "ls -l");
 		
 		final JOrchestraAdminRequest jOrchestraAdminRequest = new JOrchestraAdminRequest(jOrchestraCommand, jorchestaPath, sessionId, requestId, username, password, extraData);
 		System.out.println(new ObjectMapper().writeValueAsString(jOrchestraAdminRequest));
