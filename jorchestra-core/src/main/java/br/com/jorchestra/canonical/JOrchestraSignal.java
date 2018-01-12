@@ -2,6 +2,7 @@ package br.com.jorchestra.canonical;
 
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.ExecutorConfig;
@@ -178,7 +179,10 @@ public enum JOrchestraSignal {
 	protected void addHandle(final String jorchestraPath, final WebSocketHandlerRegistry webSocketHandlerRegistry,
 			final JOrchestraConfigurationProperties jOrchestraConfigurationProperties,
 			final WebSocketHandler webSocketHandler) {
+		final HandshakeInterceptor[] interceptors = null;
+		
 		webSocketHandlerRegistry.addHandler(webSocketHandler, jorchestraPath) //
-				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
+				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins())
+				.addInterceptors(interceptors);
 	}
 }

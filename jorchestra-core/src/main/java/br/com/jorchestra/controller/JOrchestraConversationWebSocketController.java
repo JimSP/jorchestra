@@ -68,11 +68,9 @@ public class JOrchestraConversationWebSocketController extends JOrchestraWebSock
 	private void sendEnvent(final WebSocketSession webSocketSession, final String[] messageId)
 			throws IOException, JsonProcessingException {
 
-		if (!webSocketSession.getId().equals(messageId[1])) {
-			final ObjectMapper objectMapper = new ObjectMapper();
-			final String payload = objectMapper.writeValueAsString(messageId[0]);
-			LOGGER.debug("m=sendEnvent, payload=" + payload);
-			webSocketSession.sendMessage(new TextMessage(payload));
-		}
+		final ObjectMapper objectMapper = new ObjectMapper();
+		final String payload = objectMapper.writeValueAsString(messageId[0]);
+		LOGGER.debug("m=sendEnvent, payload=" + payload);
+		webSocketSession.sendMessage(new TextMessage(payload));
 	}
 }
