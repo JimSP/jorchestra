@@ -1,0 +1,14 @@
+apply plugin: 'eclipse'
+apply plugin: 'java-library'
+
+repositories {
+    jcenter()
+}
+
+sourceCompatibility = 1.8
+
+dependencies {
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.3'
+    testImplementation 'junit:junit:4.12'
+}
+

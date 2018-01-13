@@ -5,12 +5,12 @@ apply plugin: 'signing'
 
 jar {
 	baseName = 'jorchestra'
-	version = '0.0.1-SNAPSHOT'
+	version = '0.0.2-SNAPSHOT'
 }
 
 archivesBaseName = "jorchestra"
 group = 'com.github.jimsp'
-version = '0.0.1'
+version = '0.0.2-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -19,6 +19,8 @@ dependencies {
 	compile project(':jorchestra-core')
 	compile project(':jorchestra-spring-boot-autoconfigure')
 	compile project(':spring-boot-starter-jorchestra')
+    compile project(':jorchestra-dto')
+    compile project(':jorchestra-client')
 	compile project(':jorchestra-example')
 }
 
@@ -108,6 +110,6 @@ allprojects {
 
 subprojects {
     group = 'com.github.jimsp'
-    version = '0.0.1'
+    version = '0.0.2-SNAPSHOT'
 }
 

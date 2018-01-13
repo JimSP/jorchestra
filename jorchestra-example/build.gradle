@@ -19,6 +19,8 @@ dependencies {
     compile project(':spring-boot-starter-jorchestra')
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	runtime('org.springframework.boot:spring-boot-devtools')
+	
+	compile project(':jorchestra-client')
 
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 }

@@ -10,7 +10,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 
 jar {
-    baseName = 'jorchestra-core'
+    baseName = 'jorchestra-client'
 }
 sourceCompatibility = 1.8
 
@@ -19,12 +19,10 @@ repositories { mavenCentral() }
 dependencies {
     compile('org.springframework.boot:spring-boot-starter')
     compile('org.springframework.boot:spring-boot-starter-websocket')
-    
-    compile('com.hazelcast:hazelcast')
-	compile('com.hazelcast:hazelcast-spring')
 
     compile project(':jorchestra-dto')
     
+    testCompile project(':spring-boot-starter-jorchestra')
     testCompile('org.springframework.boot:spring-boot-starter-test')
 }
 
