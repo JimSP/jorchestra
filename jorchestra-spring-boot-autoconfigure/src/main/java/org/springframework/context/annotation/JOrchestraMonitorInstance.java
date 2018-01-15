@@ -2,6 +2,8 @@ package org.springframework.context.annotation;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,6 +16,8 @@ import br.com.jorchestra.util.JOrchestraDetectUseLocalPort;
 
 @Component("jOrchestraMonitorInstance")
 public class JOrchestraMonitorInstance {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraMonitorInstance.class);
 
 	@Value("${slave.port:8081}")
 	private String slavePort;
@@ -57,26 +61,22 @@ public class JOrchestraMonitorInstance {
 			final Integer portMaster = Integer.parseInt(masterPort);
 
 			if (!Boolean.parseBoolean(slaveMode)) {// master load slave
-				System.out.println("m=monitor, portSlave=" + portSlave);
-				if (appMain != null && !JOrchestraDetectUseLocalPort.isInUse(portSlave)) {
-					loadInstance(portSlave, Boolean.TRUE);
-				} else if (appMain == null) {
-					System.out.println("m=monitor, msg=\"slave.main not configuring application.properties.\"");
-				} else {
-					System.out.println("m=monitor, msg=\"portSlave=" + portSlave + " in use.\"");
-				}
+				verifyPortAndLoadInstance(portSlave);
 			} else {// slave load master
-				if (!JOrchestraDetectUseLocalPort.isInUse(portMaster)) {
-					System.out.println("m=monitor, portMaster=" + portMaster);
-					loadInstance(portMaster, Boolean.FALSE);
-				} else if (appMain == null) {
-					System.out.println("m=monitor, msg=\"slave.main not configuring application.properties.\"");
-				} else {
-					System.out.println("m=monitor, msg=\"portMaster=" + portMaster + " in use.\"");
-				}
+				verifyPortAndLoadInstance(portMaster);
 			}
 		} finally {
 			lock.unlock();
+		}
+	}
+
+	private void verifyPortAndLoadInstance(final Integer port) {
+		if (appMain != null && !JOrchestraDetectUseLocalPort.isInUse(port)) {
+			loadInstance(port, Boolean.TRUE);
+		} else if (appMain == null) {
+			LOGGER.warn("m=monitor, msg=\"slave.main not configuring application.properties.\"");
+		} else {
+			LOGGER.debug("m=monitor, msg=\"port=" + port + " in use.\"");
 		}
 	}
 
@@ -85,8 +85,8 @@ public class JOrchestraMonitorInstance {
 
 		final String command = "java -jar " + appMain + " --server.port=" + port + " --slave.mode=" + slaveMode
 				+ " --master.port=" + masterPort + " --slave.port=" + slavePort;
-		System.out.println("m=loadInstance, command=" + command);
-
+		LOGGER.info("m=loadInstance, command=" + command);
+		
 		try {
 			runtime.exec(command);
 		} catch (IOException e) {
