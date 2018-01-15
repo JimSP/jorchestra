@@ -7,7 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Import(value = { JOrchestraAutoConfiguration.class, JOrchestaEventConguration.class })
+@Import(value = { JOrchestraAutoConfiguration.class, JOrchestaEventConguration.class,
+		JOrchestraSharedSessionConfiguration.class })
 public @interface EnableJOrchestra {
 
 }

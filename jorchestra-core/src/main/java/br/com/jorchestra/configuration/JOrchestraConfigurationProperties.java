@@ -1,6 +1,9 @@
 package br.com.jorchestra.configuration;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +21,11 @@ public class JOrchestraConfigurationProperties {
 	private Boolean supportsPartialMessages;
 	private String username;
 	private String password;
+	private Boolean enableTcpLink;
+	private List<String> tcpClusterMembers;
+	private Boolean managementCenterConfigEnable;
+	private Integer managementCenterConfigUpdateInterval;
+	private String managementCenterConfigUrl;
 
 	public String getName() {
 		return name == null ? "JOrchestra-DEV" : name;
@@ -74,7 +82,7 @@ public class JOrchestraConfigurationProperties {
 	public void setSupportsPartialMessages(Boolean supportsPartialMessages) {
 		this.supportsPartialMessages = supportsPartialMessages;
 	}
-	
+
 	public String getUsername() {
 		return username == null ? "JOrchestra" : username;
 	}
@@ -89,6 +97,48 @@ public class JOrchestraConfigurationProperties {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public Boolean getEnableTcpLink() {
+		return enableTcpLink == null ? Boolean.FALSE : enableTcpLink;
+	}
+
+	public void setEnableTcpLink(Boolean enableTcpLink) {
+		this.enableTcpLink = enableTcpLink;
+	}
+
+	public List<String> getTcpClusterMembers() {
+		return tcpClusterMembers == null ? Collections.emptyList() : tcpClusterMembers;
+	}
+
+	public void setTcpClusterMembers(String tcpClusterMembers) {
+		if (tcpClusterMembers != null && !tcpClusterMembers.equalsIgnoreCase("")) {
+			this.tcpClusterMembers = Arrays.asList(tcpClusterMembers.split("[,]"));
+		}
+	}
+
+	public Boolean getManagementCenterConfigEnable() {
+		return managementCenterConfigEnable == null ? Boolean.FALSE : managementCenterConfigEnable;
+	}
+
+	public void setManagementCenterConfigEnable(Boolean managementCenterConfigEnable) {
+		this.managementCenterConfigEnable = managementCenterConfigEnable;
+	}
+
+	public Integer getManagementCenterConfigUpdateInterval() {
+		return managementCenterConfigUpdateInterval == null ? 60000 : managementCenterConfigUpdateInterval;
+	}
+
+	public void setManagementCenterConfigUpdateInterval(Integer managementCenterConfigUpdateInterval) {
+		this.managementCenterConfigUpdateInterval = managementCenterConfigUpdateInterval;
+	}
+
+	public String getManagementCenterConfigUrl() {
+		return managementCenterConfigUrl == null ? "http://localhost:9090/admin" : managementCenterConfigUrl;
+	}
+
+	public void setManagementCenterConfigUrl(String managementCenterConfigUrl) {
+		this.managementCenterConfigUrl = managementCenterConfigUrl;
 	}
 
 	@Override
@@ -166,8 +216,24 @@ public class JOrchestraConfigurationProperties {
 
 	@Override
 	public String toString() {
-		return "JOrchestraConfigurationProperties [name=" + name + ", test=" + test + ", clusterName=" + clusterName
-				+ ", allowedOrigins=" + allowedOrigins + ", poolSize=" + poolSize + ", eventsClassMap=" + eventsClassMap
-				+ ", supportsPartialMessages=" + supportsPartialMessages + "]";
+		final int maxLen = 10;
+		return "JOrchestraConfigurationProperties [name=" + getName() + ", test=" + getTest() + ", clusterName="
+				+ getClusterName() + ", allowedOrigins=" + getAllowedOrigins() + ", poolSize=" + getPoolSize()
+				+ ", eventsClassMap=" + toString(getEventsClassMap().entrySet(), maxLen) + ", supportsPartialMessages="
+				+ getSupportsPartialMessages() + ", enableTcpLink=" + getEnableTcpLink() + ", tcpClusterMembers="
+				+ toString(getTcpClusterMembers(), maxLen) + "]";
+	}
+
+	private String toString(final Collection<?> collection, int maxLen) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("[");
+		int i = 0;
+		for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
+			if (i > 0)
+				builder.append(", ");
+			builder.append(iterator.next());
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

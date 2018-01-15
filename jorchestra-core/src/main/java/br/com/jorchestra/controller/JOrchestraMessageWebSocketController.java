@@ -12,6 +12,7 @@ import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -49,6 +50,13 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 	public void afterConnectionEstablished(final WebSocketSession webSocketSession) throws Exception {
 		super.afterConnectionEstablished(webSocketSession);
 		executorServiceMap.put(webSocketSession.getId(), Collections.synchronizedMap(new HashMap<>()));
+	}
+	
+	@Override
+	public void afterConnectionClosed(final WebSocketSession webSocketSession, final CloseStatus closeStatus)
+			throws Exception {
+		executorServiceMap.get(webSocketSession.getId()).clear();
+		super.afterConnectionClosed(webSocketSession, closeStatus);
 	}
 
 	@Override
@@ -140,15 +148,15 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 			sendCallback(webSocketSession, result);
 
 			if (future.isCancelled()) {
-				final JOrchestraStateCall jOrchestraStateCall_Success = JOrchestraStateCall
-						.createJOrchestraStateCall_CANCELED(jOrchestraStateCall_Processing, payload);
-				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Success);
-				joOrchestraStateCalls.remove(jOrchestraStateCall_Success);
-			} else {
 				final JOrchestraStateCall jOrchestraStateCall_Canceled = JOrchestraStateCall
-						.createJOrchestraStateCall_SUCCESS(jOrchestraStateCall_Processing, payload);
+						.createJOrchestraStateCall_CANCELED(jOrchestraStateCall_Processing, payload);
 				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Canceled);
 				joOrchestraStateCalls.remove(jOrchestraStateCall_Canceled);
+			} else {
+				final JOrchestraStateCall jOrchestraStateCall_Success = JOrchestraStateCall
+						.createJOrchestraStateCall_SUCCESS(jOrchestraStateCall_Processing, payload);
+				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Success);
+				joOrchestraStateCalls.remove(jOrchestraStateCall_Success);
 			}
 		} catch (InterruptedException | ExecutionException e) {
 			LOGGER.error(
@@ -159,8 +167,6 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 					.createJOrchestraStateCall_ERROR(jOrchestraStateCall_Processing, payload);
 			super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Error);
 			joOrchestraStateCalls.remove(jOrchestraStateCall_Error);
-		} finally {
-			executorServiceMap.remove(webSocketSession.getId());
 		}
 	}
 

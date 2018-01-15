@@ -23,6 +23,9 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-configuration-processor')
     
     compile project(':jorchestra-core')
+    compile('com.hazelcast:hazelcast:3.7.8')
+	compile('com.hazelcast:hazelcast-spring:3.7.8')
+	compile('com.hazelcast:hazelcast-all:3.7.8')
     
     testCompile('org.springframework.boot:spring-boot-starter-test')
 }

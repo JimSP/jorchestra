@@ -10,6 +10,7 @@ import javax.websocket.DeploymentException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -22,6 +23,7 @@ import br.com.jorchestra.client.exception.JOrchestraConnectionErrorException;
 import br.com.jorchestra.dto.JOrchestraBeanResponse;
 import br.com.jorchestra.example.JorchestraApplication;
 
+@Ignore
 public class JOrchestraIntegrateTest {
 
 	private static final String END_POINT = "ws://localhost:8080/jOrchestra-beans";

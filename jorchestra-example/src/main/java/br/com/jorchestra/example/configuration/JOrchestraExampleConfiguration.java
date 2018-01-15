@@ -3,7 +3,7 @@ package br.com.jorchestra.example.configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableJOrchestra;
+import org.springframework.context.annotation.JOrchestraMonitorInstance;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
@@ -13,19 +13,23 @@ import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 import br.com.jorchestra.service.JOrchestraRegisterSystemEvents;
 
 @Configuration
-@EnableJOrchestra
 public class JOrchestraExampleConfiguration {
 
 	@Autowired
-	private JOrchestraConfigurationProperties jorchestraConfigurationProperties;
+	private JOrchestraConfigurationProperties jOrchestraConfigurationProperties;
 
 	@Bean("hazelcastInstance")
 	public HazelcastInstance hazelcastInstance() {
-		return Hazelcast.getOrCreateHazelcastInstance(new Config(jorchestraConfigurationProperties.getClusterName()));
+		return Hazelcast.getOrCreateHazelcastInstance(new Config(jOrchestraConfigurationProperties.getClusterName()));
 	}
 	
 	@Bean("jOrchestraRegisterSystemEvents")
 	public JOrchestraRegisterSystemEvents JOrchestraRegisterSystemEvents() {
 		return new JOrchestraRegisterSystemEvents();
+	}
+	
+	@Bean("jOrchestraMonitorInstance")
+	public JOrchestraMonitorInstance jOrchestraMonitorInstance() {
+		return new JOrchestraMonitorInstance();
 	}
 }
