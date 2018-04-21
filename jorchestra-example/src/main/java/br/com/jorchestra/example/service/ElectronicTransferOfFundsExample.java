@@ -43,15 +43,16 @@ public class ElectronicTransferOfFundsExample {
 		
 		if (Status.isSuccess(statusWithdraw)) {
 			final Status statusTransfer = depositIntoAccount.deposit(to, value);
-			transferResponseBuilder.withStatusWithdraw(statusTransfer);
+			transferResponseBuilder.withStatusTransfer(statusTransfer);
 		} else {
 			final Status statusTransfer = depositIntoAccount.deposit(from, value);
-			transferResponseBuilder.withStatusWithdraw(statusTransfer);
+			transferResponseBuilder.withStatusTransfer(statusTransfer);
 		}
 
 		final TransferResponse transferResponse = transferResponseBuilder//
 				.setTransferIdentification(transferRequest.getTransferIdentification()) //
 				.withTransferRequest(transferRequest) //
+				.withStatusWithdraw(statusWithdraw)
 				.build();
 
 		final Status statusNotification = jOrchestraNotificationEletronicTransferAccount.account(transferResponse);

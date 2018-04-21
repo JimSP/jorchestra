@@ -78,7 +78,7 @@ public enum JOrchestraSignal implements JOrchestraSignalType {
 		@Override
 		public <T> T createService(final String jorchestraPath, final Boolean reliable,
 				final HazelcastInstance hazelcastInstance, final Class<T> messageType, final Class<T> classType) {
-			return (T) createQueueConfig(jorchestraPath, hazelcastInstance, messageType);
+			return (T) createQueue(jorchestraPath, hazelcastInstance, messageType);
 		}
 
 		@Override
@@ -225,7 +225,7 @@ public enum JOrchestraSignal implements JOrchestraSignalType {
 		return hazelcastInstance.getExecutorService(jorchestraPath);
 	}
 
-	private static <T> IQueue<T> createQueueConfig(final String jorchestraPath,
+	private static <T> IQueue<T> createQueue(final String jorchestraPath,
 			final HazelcastInstance hazelcastInstance, final Class<T> clazz) {
 		return hazelcastInstance.getQueue(jorchestraPath);
 	}

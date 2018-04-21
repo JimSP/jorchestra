@@ -20,6 +20,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter')
     compile('org.springframework.boot:spring-boot-starter-websocket')
 
+	compile project(':jorchestra-core')
     compile project(':jorchestra-dto')
     
     testCompile project(':spring-boot-starter-jorchestra')
