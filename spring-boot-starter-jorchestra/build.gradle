@@ -25,6 +25,7 @@ dependencies {
     
     compile('com.hazelcast:hazelcast')
 	compile('com.hazelcast:hazelcast-spring')
+	compile('com.hazelcast:spring-data-hazelcast:1.1.1')
     
     testCompile('org.springframework.boot:spring-boot-starter-test')
 }

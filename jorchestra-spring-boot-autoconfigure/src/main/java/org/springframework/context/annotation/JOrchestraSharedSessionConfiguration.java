@@ -23,7 +23,7 @@ public class JOrchestraSharedSessionConfiguration {
 	}
 
 	@Bean
-	public WebFilter webFilter(HazelcastInstance hazelcastInstance) {
+	public WebFilter webFilter(final HazelcastInstance hazelcastInstance) {
 		final Properties properties = new Properties();
 		properties.put("instance-name", hazelcastInstance.getName());
 		properties.put("sticky-session", "false");

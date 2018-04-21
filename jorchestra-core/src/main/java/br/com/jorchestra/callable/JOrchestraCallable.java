@@ -32,17 +32,32 @@ public class JOrchestraCallable implements Callable<Object>, Serializable {
 	public Object call() throws Exception {
 		LOGGER.debug("m=call, parameters=" + Arrays.toString(parameters));
 
-		try {
-			final Object jOrchestraBean = JOrchestraContextUtils
-					.getJorchestraBean(jOrchestraHandle.getjOrchestraBeanName());
+		final Object jOrchestraBean = getBean();
 
-			return JOrchestraContextUtils
-					.getMethosByJOrchestraPath(jOrchestraBean, jOrchestraHandle.getMethodName(), parametersType)
-					.invoke(jOrchestraBean, parameters);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			LOGGER.error("m=call, parameters=" + Arrays.toString(parameters), e);
-			throw new RuntimeException("m=call, parameters=" + Arrays.toString(parameters), e);
-		}
+		return invoke(jOrchestraBean);
 	}
+	
+	public void execute() throws Exception {
+		LOGGER.debug("m=execute, parameters=" + Arrays.toString(parameters));
+
+		final Object jOrchestraBean = getBean();
+
+		invoke(jOrchestraBean);
+	}
+	
+	private Object getBean() {
+		final Object jOrchestraBean = JOrchestraContextUtils
+				.getJorchestraBean(jOrchestraHandle.getjOrchestraBeanName());
+		return jOrchestraBean;
+	}
+	
+	private Object invoke(final Object jOrchestraBean)
+			throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		
+		return JOrchestraContextUtils
+				.getMethosByJOrchestraPath(jOrchestraBean, jOrchestraHandle.getMethodName(), parametersType)
+				.invoke(jOrchestraBean, parameters);
+	}
+
 
 }

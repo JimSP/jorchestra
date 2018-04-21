@@ -1,7 +1,7 @@
 package br.com.jorchestra.util;
 
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.net.Socket;
 
 public class JOrchestraDetectUseLocalPort {
 	
@@ -10,10 +10,10 @@ public class JOrchestraDetectUseLocalPort {
 	}
 
 	public static Boolean isInUse(final Integer port) {
-		try(final ServerSocket serverSocket = new ServerSocket(port)){
-			return Boolean.FALSE;
+		try(final Socket socket= new Socket("127.0.0.1", port)){
+			return socket.isConnected();
 		}catch (IOException e) {
-			return Boolean.TRUE;
+			return Boolean.FALSE;
 		}
 	}
 	

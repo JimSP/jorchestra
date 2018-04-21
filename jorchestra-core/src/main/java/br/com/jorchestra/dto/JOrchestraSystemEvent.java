@@ -25,6 +25,4 @@ public class JOrchestraSystemEvent extends ApplicationEvent {
 		return "JOrchestraSystemEvent [jOrchestraConfigurationProperties=" + jOrchestraConfigurationProperties
 				+ ", " + super.toString() + "]";
 	}
-	
-	
 }

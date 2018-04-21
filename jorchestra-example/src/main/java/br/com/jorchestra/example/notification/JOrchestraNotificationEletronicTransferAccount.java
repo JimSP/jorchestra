@@ -15,7 +15,7 @@ import br.com.jorchestra.dto.JOrchestraNotification;
 import br.com.jorchestra.example.canonical.Status;
 import br.com.jorchestra.example.dto.TransferResponse;
 
-@JOrchestra(path = "notification", jOrchestraSignal = JOrchestraSignal.NOTIFICATION, reliable = JOrchestraNotificationEletronicTransferAccount.RELIABLE)
+@JOrchestra(path = "notification", jOrchestraSignalType = JOrchestraSignal.NOTIFICATION, reliable = JOrchestraNotificationEletronicTransferAccount.RELIABLE)
 public class JOrchestraNotificationEletronicTransferAccount {
 
 	private static final String NOTIFICATION_ACCOUNT = "/notification-account";

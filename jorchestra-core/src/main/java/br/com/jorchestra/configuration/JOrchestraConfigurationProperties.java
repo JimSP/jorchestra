@@ -17,6 +17,7 @@ public class JOrchestraConfigurationProperties {
 	private String clusterName;
 	private String allowedOrigins;
 	private Integer poolSize;
+	private Long poolingMilliseconds;
 	private Map<String, List<String>> eventsClassMap;
 	private Boolean supportsPartialMessages;
 	private String username;
@@ -26,6 +27,7 @@ public class JOrchestraConfigurationProperties {
 	private Boolean managementCenterConfigEnable;
 	private Integer managementCenterConfigUpdateInterval;
 	private String managementCenterConfigUrl;
+	private Boolean portServerAutoIncrement;
 
 	public String getName() {
 		return name == null ? "JOrchestra-DEV" : name;
@@ -65,6 +67,14 @@ public class JOrchestraConfigurationProperties {
 
 	public void setPoolSize(Integer poolSize) {
 		this.poolSize = poolSize;
+	}
+	
+	public Long getPoolingMilliseconds() {
+		return poolingMilliseconds == null ? 1000L : poolingMilliseconds;
+	}
+	
+	public void setPoolingMilliseconds(final Long poolingMilliseconds) {
+		this.poolingMilliseconds = poolingMilliseconds;
 	}
 
 	public Map<String, List<String>> getEventsClassMap() {
@@ -139,6 +149,14 @@ public class JOrchestraConfigurationProperties {
 
 	public void setManagementCenterConfigUrl(String managementCenterConfigUrl) {
 		this.managementCenterConfigUrl = managementCenterConfigUrl;
+	}
+	
+	public Boolean getPortServerAutoIncrement() {
+		return portServerAutoIncrement == null ? Boolean.FALSE : portServerAutoIncrement;
+	}
+
+	public void setPortServerAutoIncrement(Boolean portServerAutoIncrement) {
+		this.portServerAutoIncrement = portServerAutoIncrement;
 	}
 
 	@Override

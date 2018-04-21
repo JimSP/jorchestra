@@ -165,6 +165,21 @@ public class JOrchestraStateCall implements Serializable {
 				payload);
 	}
 
+	public static JOrchestraStateCall createJOrchestraStateCall_PROCESSING_FAILOVER(
+			final JOrchestraStateCall jOrchestraStateCall_Processing, final String payload) {
+
+		return new JOrchestraStateCall( //
+				jOrchestraStateCall_Processing.getClusterName(), //
+				jOrchestraStateCall_Processing.getjOcrhestrName(), //
+				jOrchestraStateCall_Processing.getjOrchestraPath(), //
+				jOrchestraStateCall_Processing.getSessionId(), //
+				jOrchestraStateCall_Processing.getRequestId(), //
+				System.currentTimeMillis(), //
+				null, //
+				JOrchestraState.PROCESSING_FAILOVER, //
+				payload);
+	}
+
 	public static JOrchestraStateCall createSearchTemplate(
 			final JOrchestraConfigurationProperties jOrchestraConfigurationProperties,
 			final JOrchestraAdminRequest jOrchestraAdminRequest, final String jOrchestraPah) {

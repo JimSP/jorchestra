@@ -30,6 +30,11 @@ public class JOrchestraConversationWebSocketController extends JOrchestraWebSock
 		super(jOrchestraHandle, jOrchestraStateCallTopic, jOrchestraConfigurationProperties);
 		this.topic = topic;
 	}
+	
+	@Override
+	public boolean supportsPartialMessages() {
+		return jOrchestraConfigurationProperties.getSupportsPartialMessages();
+	}
 
 	@Override
 	public void handleTextMessage(final WebSocketSession webSocketSession, final TextMessage textMessage)

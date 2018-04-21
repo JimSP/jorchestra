@@ -13,7 +13,7 @@ import br.com.jorchestra.annotation.JOrchestra;
 import br.com.jorchestra.canonical.JOrchestraSignal;
 import br.com.jorchestra.dto.JOrchestraSystemEvent;
 
-@JOrchestra(path = "events", jOrchestraSignal = JOrchestraSignal.EVENT, reliable = JOrchestraHelloWordSystemEvent.RELIABLE)
+@JOrchestra(path = "events", jOrchestraSignalType = JOrchestraSignal.EVENT, reliable = JOrchestraHelloWordSystemEvent.RELIABLE)
 public class JOrchestraHelloWordSystemEvent implements Consumer<JOrchestraSystemEvent> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraHelloWordSystemEvent.class);

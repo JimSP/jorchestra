@@ -1,25 +1,33 @@
 package br.com.jorchestra.canonical;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.ExecutorConfig;
+import com.hazelcast.config.QueueConfig;
 import com.hazelcast.config.TopicConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IExecutorService;
+import com.hazelcast.core.IQueue;
 import com.hazelcast.core.ITopic;
 
+import br.com.jorchestra.callable.JOrchestraCallable;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 import br.com.jorchestra.controller.JOrchestraEventWebSocketController;
 import br.com.jorchestra.controller.JOrchestraMessageWebSocketController;
 import br.com.jorchestra.controller.JOrchestraNotificationWebSocketController;
+import br.com.jorchestra.controller.JOrchestraPublishWebSocketController;
 import br.com.jorchestra.dto.JOrchestraNotification;
+import br.com.jorchestra.dto.JOrchestraPublishData;
 import br.com.jorchestra.dto.JOrchestraSystemEvent;
 import br.com.jorchestra.util.JOrchestraContextUtils;
 
-public enum JOrchestraSignal {
+public enum JOrchestraSignal implements JOrchestraSignalType {
 
 	MESSAGE {
 		@Override
@@ -59,9 +67,70 @@ public enum JOrchestraSignal {
 
 		}
 	},
+
+	PUBLISH {
+		@Override
+		public void addConfig(final String jorchestraPath, final Config config) {
+			config.addQueueConfig(createQueueConfig(jorchestraPath));
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T> T createService(final String jorchestraPath, final Boolean reliable,
+				final HazelcastInstance hazelcastInstance, final Class<T> messageType, final Class<T> classType) {
+			return (T) createQueueConfig(jorchestraPath, hazelcastInstance, messageType);
+		}
+
+		@Override
+		public Class<?> getMessageType() {
+			return JOrchestraPublishData.class;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T> Class<T> getClassType() {
+			return (Class<T>) IQueue.class;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public void register(final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic, final String jorchestraPath,
+				final JOrchestraHandle jOrchestraHandle, final WebSocketHandlerRegistry webSocketHandlerRegistry,
+				final JOrchestraConfigurationProperties jOrchestraConfigurationProperties, final Object iService) {
+
+			final IQueue<JOrchestraCallable> queue = (IQueue<JOrchestraCallable>) iService;
+
+			Executors.newFixedThreadPool(jOrchestraConfigurationProperties.getPoolSize())
+					.submit(() -> pooling(queue, jOrchestraConfigurationProperties));
+
+			final JOrchestraPublishWebSocketController jOrchestraWebSocketController = new JOrchestraPublishWebSocketController(
+					jOrchestraHandle, jOrchestraStateCallTopic, jOrchestraConfigurationProperties, queue);
+
+			webSocketHandlerRegistry.addHandler(jOrchestraWebSocketController, jorchestraPath) //
+					.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins());
+		}
+
+		private void pooling(final IQueue<JOrchestraCallable> queue,
+				final JOrchestraConfigurationProperties jOrchestraConfigurationProperties) {
+			while (true) {
+				try {
+					final JOrchestraCallable jOrchestraCallable = queue.take();
+					try {
+						jOrchestraCallable.execute();
+						TimeUnit.MILLISECONDS.sleep(jOrchestraConfigurationProperties.getPoolingMilliseconds());
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+	},
+
 	NOTIFICATION {
 		@Override
-		public void addConfig(String jorchestraPath, final Config config) {
+		public void addConfig(final String jorchestraPath, final Config config) {
 			config.addTopicConfig(createTopicConfig(jorchestraPath));
 		}
 
@@ -70,7 +139,6 @@ public enum JOrchestraSignal {
 		public <T> T createService(final String jorchestraPath, final Boolean reliable,
 				final HazelcastInstance hazelcastInstance, final Class<T> messageType, final Class<T> classType) {
 			return (T) createTopic(jorchestraPath, reliable, hazelcastInstance, messageType);
-
 		}
 
 		@Override
@@ -102,7 +170,7 @@ public enum JOrchestraSignal {
 	},
 	EVENT {
 		@Override
-		public void addConfig(String jorchestraPath, final Config config) {
+		public void addConfig(final String jorchestraPath, final Config config) {
 			config.addTopicConfig(createTopicConfig(jorchestraPath));
 		}
 
@@ -140,22 +208,12 @@ public enum JOrchestraSignal {
 		}
 	};
 
-	public abstract void addConfig(final String jorchestraPath, final Config config);
-
-	public abstract <T> T createService(final String jorchestraPath, final Boolean reliable,
-			final HazelcastInstance hazelcastInstance, final Class<T> messageType, final Class<T> classType);
-
-	public abstract Class<?> getMessageType();
-
-	public abstract <T> Class<T> getClassType();
-
-	public abstract void register(final ITopic<JOrchestraStateCall> jOrchestraStateCallTopic,
-			final String jorchestraPath, final JOrchestraHandle jOrchestraHandle,
-			final WebSocketHandlerRegistry webSocketHandlerRegistry,
-			final JOrchestraConfigurationProperties jOrchestraConfigurationProperties, final Object iService);
-
 	protected static ExecutorConfig createExecutorConfig(final String jorchestraPath) {
 		return new ExecutorConfig(jorchestraPath);
+	}
+
+	protected static QueueConfig createQueueConfig(final String jorchestraPath) {
+		return new QueueConfig(jorchestraPath);
 	}
 
 	protected static TopicConfig createTopicConfig(final String jorchestraPath) {
@@ -167,7 +225,12 @@ public enum JOrchestraSignal {
 		return hazelcastInstance.getExecutorService(jorchestraPath);
 	}
 
-	protected <T> ITopic<T> createTopic(final String jorchestraPath, final Boolean reliable,
+	private static <T> IQueue<T> createQueueConfig(final String jorchestraPath,
+			final HazelcastInstance hazelcastInstance, final Class<T> clazz) {
+		return hazelcastInstance.getQueue(jorchestraPath);
+	}
+
+	protected static <T> ITopic<T> createTopic(final String jorchestraPath, final Boolean reliable,
 			final HazelcastInstance hazelcastInstance, final Class<T> clazz) {
 		if (reliable) {
 			return hazelcastInstance.getReliableTopic(jorchestraPath);
@@ -180,9 +243,8 @@ public enum JOrchestraSignal {
 			final JOrchestraConfigurationProperties jOrchestraConfigurationProperties,
 			final WebSocketHandler webSocketHandler) {
 		final HandshakeInterceptor[] interceptors = null;
-		
+
 		webSocketHandlerRegistry.addHandler(webSocketHandler, jorchestraPath) //
-				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins())
-				.addInterceptors(interceptors);
+				.setAllowedOrigins(jOrchestraConfigurationProperties.getAllowedOrigins()).addInterceptors(interceptors);
 	}
 }

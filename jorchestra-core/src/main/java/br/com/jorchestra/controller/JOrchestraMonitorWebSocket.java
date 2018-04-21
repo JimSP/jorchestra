@@ -18,18 +18,24 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 
 import br.com.jorchestra.canonical.JOrchestraStateCall;
+import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 
 public final class JOrchestraMonitorWebSocket extends TextWebSocketHandler
 		implements MessageListener<JOrchestraStateCall> {
-	
-	protected final Map<String, WebSocketSession> webSocketSessionMap = Collections
-			.synchronizedMap(new HashMap<>());
+
+	private final Map<String, WebSocketSession> webSocketSessionMap = Collections.synchronizedMap(new HashMap<>());
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraMonitorWebSocket.class);
-		
+
+	private final JOrchestraConfigurationProperties jOrchestraConfigurationProperties;
+
+	public JOrchestraMonitorWebSocket(final JOrchestraConfigurationProperties jOrchestraConfigurationProperties) {
+		this.jOrchestraConfigurationProperties = jOrchestraConfigurationProperties;
+	}
+
 	@Override
 	public boolean supportsPartialMessages() {
-		return true;
+		return jOrchestraConfigurationProperties.getSupportsPartialMessages();
 	}
 
 	@Override
@@ -40,12 +46,12 @@ public final class JOrchestraMonitorWebSocket extends TextWebSocketHandler
 			LOGGER.error("m=onMessage, jOrchestraStateCall=" + message.getMessageObject());
 		}
 	}
-	
+
 	@Override
 	public void afterConnectionEstablished(final WebSocketSession webSocketSession) throws Exception {
 		webSocketSessionMap.put(webSocketSession.getId(), webSocketSession);
 	}
-	
+
 	@Override
 	public void afterConnectionClosed(final WebSocketSession webSocketSession, final CloseStatus closeStatus)
 			throws Exception {

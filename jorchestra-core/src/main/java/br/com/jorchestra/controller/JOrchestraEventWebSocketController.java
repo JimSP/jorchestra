@@ -31,19 +31,22 @@ public class JOrchestraEventWebSocketController extends JOrchestraWebSocketTempl
 
 	@Override
 	public void onMessage(final Message<JOrchestraSystemEvent> message) {
-		super.webSocketSessionMap.entrySet().parallelStream().forEach(action -> {
-			try {
-				sendEnvent(action.getValue(), message.getMessageObject());
-			} catch (IOException e) {
-				LOGGER.error("m=onMessage, message=" + message, e);
-			}
-		});
+		super.webSocketSessionMap //
+				.entrySet() //
+				.parallelStream() //
+				.forEach(action -> {
+					try {
+						sendEnvent(action.getValue(), message.getMessageObject());
+					} catch (IOException e) {
+						LOGGER.error("m=onMessage, message=" + message, e);
+					}
+				});
 	}
-	
+
 	@Override
 	protected void onMessage(final WebSocketSession webSocketSession, final TextMessage textMessage,
 			JOrchestraStateCall jOrchestraStateCallWaiting) throws Exception {
-		
+
 	}
 
 	private void sendEnvent(final WebSocketSession webSocketSession, final Object object)

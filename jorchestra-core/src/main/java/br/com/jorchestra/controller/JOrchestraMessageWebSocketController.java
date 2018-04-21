@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -24,6 +25,7 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.ITopic;
 
 import br.com.jorchestra.callable.JOrchestraCallable;
+import br.com.jorchestra.callable.JOrchestraCallableFailOver;
 import br.com.jorchestra.canonical.JOrchestraHandle;
 import br.com.jorchestra.canonical.JOrchestraStateCall;
 import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
@@ -31,6 +33,8 @@ import br.com.jorchestra.configuration.JOrchestraConfigurationProperties;
 public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTemplate {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JOrchestraMessageWebSocketController.class);
+	
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	private final IExecutorService executorService;
 
@@ -51,7 +55,7 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 		super.afterConnectionEstablished(webSocketSession);
 		executorServiceMap.put(webSocketSession.getId(), Collections.synchronizedMap(new HashMap<>()));
 	}
-	
+
 	@Override
 	public void afterConnectionClosed(final WebSocketSession webSocketSession, final CloseStatus closeStatus)
 			throws Exception {
@@ -69,13 +73,9 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 					+ textMessage.getPayload(), t);
 
 			final JOrchestraStateCall jOrchestraStateCall_Error = JOrchestraStateCall.createJOrchestraStateCall_ERROR(
-					jOrchestraConfigurationProperties.getClusterName(),
-					jOrchestraConfigurationProperties.getName(),
-					webSocketSession.getUri().getPath(),
-					webSocketSession.getId(),
-					System.currentTimeMillis(),
-					System.currentTimeMillis(),
-					textMessage.getPayload());
+					jOrchestraConfigurationProperties.getClusterName(), jOrchestraConfigurationProperties.getName(),
+					webSocketSession.getUri().getPath(), webSocketSession.getId(), System.currentTimeMillis(),
+					System.currentTimeMillis(), textMessage.getPayload());
 
 			super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Error);
 
@@ -87,13 +87,9 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 	@Override
 	public void handleTransportError(final WebSocketSession webSocketSession, final Throwable e) throws Exception {
 		final JOrchestraStateCall jOrchestraStateCall_Error = JOrchestraStateCall.createJOrchestraStateCall_ERROR(
-				jOrchestraConfigurationProperties.getClusterName(),
-				jOrchestraConfigurationProperties.getName(),
-				webSocketSession.getUri().getPath(),
-				webSocketSession.getId(),
-				System.currentTimeMillis(),
-				System.currentTimeMillis(),
-				null);
+				jOrchestraConfigurationProperties.getClusterName(), jOrchestraConfigurationProperties.getName(),
+				webSocketSession.getUri().getPath(), webSocketSession.getId(), System.currentTimeMillis(),
+				System.currentTimeMillis(), null);
 
 		super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Error);
 
@@ -109,29 +105,11 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 	}
 
 	private void invokeJOrchestraBean(final WebSocketSession webSocketSession, final TextMessage textMessage,
-			final JOrchestraStateCall jOrchestraStateCallWaiting)
-			throws IllegalAccessException, InvocationTargetException, IOException, JsonParseException,
-			JsonMappingException, JsonProcessingException, InterruptedException, ExecutionException {
+			final JOrchestraStateCall jOrchestraStateCallWaiting) throws JsonProcessingException, IOException {
 
 		final String payload = textMessage.getPayload();
-		final ObjectMapper objectMapper = new ObjectMapper();
-		final Class<?>[] parameterTypes = jOrchestraHandle.getJorchestraParametersType();
+		final JOrchestraCallable jOrchestraCallable = createJOrchestraCallable(payload);
 
-		final List<Object> list = new ArrayList<>();
-		for (Class<?> parameterClass : parameterTypes) {
-			final Object parameter = objectMapper.readValue(payload, parameterClass);
-			list.add(parameter);
-		}
-
-		final JOrchestraCallable jOrchestraCallable = new JOrchestraCallable(jOrchestraHandle, parameterTypes,
-				list.toArray());
-
-		/// TODO: criar um map de cancelamento no endpoint admin, verificar no admin
-		/// se a task Future já existe para esse requestId, caso não, registrar o
-		/// cancelamento.
-		/// Nesse controller, caso um requestId tenha sido cancelado antes de ter sido
-		/// submetido,
-		/// nao submeter JOrchestraCallable
 		final Future<Object> future = executorService.submit(jOrchestraCallable);
 
 		final JOrchestraStateCall jOrchestraStateCall_Processing = JOrchestraStateCall
@@ -147,32 +125,107 @@ public class JOrchestraMessageWebSocketController extends JOrchestraWebSocketTem
 			final Object result = future.get();
 			sendCallback(webSocketSession, result);
 
-			if (future.isCancelled()) {
-				final JOrchestraStateCall jOrchestraStateCall_Canceled = JOrchestraStateCall
-						.createJOrchestraStateCall_CANCELED(jOrchestraStateCall_Processing, payload);
-				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Canceled);
-				joOrchestraStateCalls.remove(jOrchestraStateCall_Canceled);
-			} else {
-				final JOrchestraStateCall jOrchestraStateCall_Success = JOrchestraStateCall
-						.createJOrchestraStateCall_SUCCESS(jOrchestraStateCall_Processing, payload);
-				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Success);
-				joOrchestraStateCalls.remove(jOrchestraStateCall_Success);
-			}
+			verifyState(payload, future, jOrchestraStateCall_Processing, joOrchestraStateCalls);
 		} catch (InterruptedException | ExecutionException e) {
 			LOGGER.error(
 					"handleTextMessage, jOrchestraStateCall=" + jOrchestraStateCall_Processing + ", payload=" + payload,
 					e);
 
-			final JOrchestraStateCall jOrchestraStateCall_Error = JOrchestraStateCall
-					.createJOrchestraStateCall_ERROR(jOrchestraStateCall_Processing, payload);
-			super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Error);
-			joOrchestraStateCalls.remove(jOrchestraStateCall_Error);
+			proccessError(payload, jOrchestraStateCall_Processing, joOrchestraStateCalls);
+
+			if (jOrchestraHandle.getFailOverMethodName() != null) {
+				final JOrchestraCallableFailOver jOrchestraCallableFailOver = createJOrchestraCallableFailOver(payload);
+
+				final Future<Object> futureFailOver = executorService.submit(jOrchestraCallableFailOver);
+
+				final JOrchestraStateCall jOrchestraStateCall_ProcessingFailOver = JOrchestraStateCall
+						.createJOrchestraStateCall_PROCESSING_FAILOVER(jOrchestraStateCall_Processing, payload);
+				joOrchestraStateCalls.put(jOrchestraStateCall_ProcessingFailOver, futureFailOver);
+
+				super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_ProcessingFailOver);
+
+				try {
+					final Object result = futureFailOver.get();
+					sendCallback(webSocketSession, result);
+
+					verifyState(payload, futureFailOver, jOrchestraStateCall_ProcessingFailOver, joOrchestraStateCalls);
+				} catch (InterruptedException | ExecutionException e1) {
+					LOGGER.error(
+							"handleTextMessage, jOrchestraStateCall=" + jOrchestraStateCall_ProcessingFailOver + ", payload=" + payload,
+							e);
+					
+					proccessError(payload, jOrchestraStateCall_ProcessingFailOver, joOrchestraStateCalls);
+				}
+			}
+
+		} catch (CancellationException e) {
+			final JOrchestraStateCall jOrchestraStateCall_Canceled = JOrchestraStateCall
+					.createJOrchestraStateCall_CANCELED(jOrchestraStateCall_Processing, payload);
+			super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Canceled);
+			joOrchestraStateCalls.remove(jOrchestraStateCall_Canceled);
+		}
+	}
+
+	private void proccessError(final String payload, final JOrchestraStateCall jOrchestraStateCall_Processing,
+			final Map<JOrchestraStateCall, Future<Object>> joOrchestraStateCalls) {
+		final JOrchestraStateCall jOrchestraStateCall_Error = JOrchestraStateCall
+				.createJOrchestraStateCall_ERROR(jOrchestraStateCall_Processing, payload);
+		super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Error);
+		joOrchestraStateCalls.remove(jOrchestraStateCall_Error);
+	}
+
+	private JOrchestraCallableFailOver createJOrchestraCallableFailOver(final String payload)
+			throws JsonParseException, JsonMappingException, IOException {
+		final Class<?>[] parameterTypes = jOrchestraHandle.getJorchestraParametersType();
+
+		final List<Object> list = createParametersTtype(payload, parameterTypes);
+
+		final JOrchestraCallableFailOver jOrchestraCallable = new JOrchestraCallableFailOver(jOrchestraHandle,
+				parameterTypes, list.toArray());
+
+		return jOrchestraCallable;
+	}
+
+	private JOrchestraCallable createJOrchestraCallable(final String payload)
+			throws JsonParseException, JsonMappingException, IOException {
+		final Class<?>[] parameterTypes = jOrchestraHandle.getJorchestraParametersType();
+
+		final List<Object> list = createParametersTtype(payload, parameterTypes);
+
+		final JOrchestraCallable jOrchestraCallable = new JOrchestraCallable(jOrchestraHandle, parameterTypes,
+				list.toArray());
+
+		return jOrchestraCallable;
+	}
+
+	private List<Object> createParametersTtype(final String payload,
+			final Class<?>[] parameterTypes) throws IOException, JsonParseException, JsonMappingException {
+		final List<Object> list = new ArrayList<>();
+		for (Class<?> parameterClass : parameterTypes) {
+			final Object parameter = objectMapper.readValue(payload, parameterClass);
+			list.add(parameter);
+		}
+		return list;
+	}
+
+	private void verifyState(final String payload, final Future<Object> future,
+			final JOrchestraStateCall jOrchestraStateCall_Processing,
+			final Map<JOrchestraStateCall, Future<Object>> joOrchestraStateCalls) {
+		if (future.isCancelled()) {
+			final JOrchestraStateCall jOrchestraStateCall_Canceled = JOrchestraStateCall
+					.createJOrchestraStateCall_CANCELED(jOrchestraStateCall_Processing, payload);
+			super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Canceled);
+			joOrchestraStateCalls.remove(jOrchestraStateCall_Canceled);
+		} else {
+			final JOrchestraStateCall jOrchestraStateCall_Success = JOrchestraStateCall
+					.createJOrchestraStateCall_SUCCESS(jOrchestraStateCall_Processing, payload);
+			super.jOrchestraStateCallTopic.publish(jOrchestraStateCall_Success);
+			joOrchestraStateCalls.remove(jOrchestraStateCall_Success);
 		}
 	}
 
 	private void sendCallback(final WebSocketSession webSocketSession, final Object object)
 			throws IOException, JsonProcessingException {
-		final ObjectMapper objectMapper = new ObjectMapper();
 		final String payload = objectMapper.writeValueAsString(object);
 		LOGGER.debug("m=sendCallback, payload=" + payload);
 		webSocketSession.sendMessage(new TextMessage(payload));
